@@ -1,607 +1,404 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1745ef">
+  <title>Pain Scale Report | LittleCare AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: #102454;
+      background: #eaf0ff;
+      font-synthesis: none;
+    }
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; } .dot-matrix-bg { background-image: radial-gradient(rgba(255, 255, 255, 0.28) 1.25px, transparent 1.25px); background-size: 24px 24px; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      "colors": {
-        "inverse-primary": "#bbc3ff",
-        "surface-variant": "#dce1ff",
-        "on-secondary-fixed": "#001847",
-        "on-primary-container": "#ccd1ff",
-        "primary-container": "#0a3cff",
-        "secondary-container": "#5b8cfe",
-        "on-secondary-container": "#002664",
-        "on-tertiary-container": "#ffc4d5",
-        "on-primary-fixed-variant": "#002ccd",
-        "on-secondary-fixed-variant": "#0040a0",
-        "surface-bright": "#faf8ff",
-        "secondary": "#1958c7",
-        "primary-fixed-dim": "#bbc3ff",
-        "on-tertiary-fixed-variant": "#8e004c",
-        "on-secondary": "#ffffff",
-        "tertiary-container": "#b30062",
-        "on-background": "#061749",
-        "surface-container-lowest": "#ffffff",
-        "inverse-surface": "#1f2d5f",
-        "on-surface": "#061749",
-        "primary": "#002ac6",
-        "outline": "#747689",
-        "on-surface-variant": "#444657",
-        "secondary-fixed-dim": "#b1c5ff",
-        "surface-tint": "#1842ff",
-        "on-primary-fixed": "#000f5d",
-        "tertiary-fixed-dim": "#ffb0c9",
-        "error": "#ba1a1a",
-        "surface-container-high": "#e4e7ff",
-        "secondary-fixed": "#dae2ff",
-        "primary-fixed": "#dee0ff",
-        "surface-container-highest": "#dce1ff",
-        "on-error": "#ffffff",
-        "inverse-on-surface": "#efefff",
-        "surface-container-low": "#f3f2ff",
-        "tertiary": "#880049",
-        "on-tertiary": "#ffffff",
-        "error-container": "#ffdad6",
-        "tertiary-fixed": "#ffd9e3",
-        "on-primary": "#ffffff",
-        "on-tertiary-fixed": "#3e001e",
-        "on-error-container": "#93000a",
-        "surface": "#faf8ff",
-        "outline-variant": "#c4c5da",
-        "surface-container": "#ebedff",
-        "background": "#faf8ff",
-        "surface-dim": "#d1d8ff"
-      },
-      "borderRadius": {
-        "DEFAULT": "1rem",
-        "lg": "2rem",
-        "xl": "3rem",
-        "full": "9999px"
-      },
-      "spacing": {
-        "margin": "1.5rem",
-        "margin-lg": "3rem",
-        "gutter": "1.5rem",
-        "margin-sm": "1rem",
-        "space-xl": "2.25rem",
-        "space-xs": "0.25rem",
-        "space-sm": "0.5rem",
-        "gutter-lg": "2rem",
-        "space-2xl": "3.5rem",
-        "space-md": "1rem",
-        "gutter-sm": "1rem",
-        "space-lg": "1.5rem"
-      },
-      "fontFamily": {
-        "body-md": ["Plus Jakarta Sans"],
-        "headline-sm": ["Plus Jakarta Sans"],
-        "body-lg": ["Plus Jakarta Sans"],
-        "headline-md": ["Plus Jakarta Sans"],
-        "label-lg": ["Plus Jakarta Sans"],
-        "headline-lg-mobile": ["Plus Jakarta Sans"],
-        "body-sm": ["Plus Jakarta Sans"],
-        "label-sm": ["Plus Jakarta Sans"],
-        "display": ["Plus Jakarta Sans"],
-        "label-md": ["Plus Jakarta Sans"],
-        "display-mobile": ["Plus Jakarta Sans"],
-        "headline-lg": ["Plus Jakarta Sans"]
-      },
-      "fontSize": {
-        "body-md": ["1rem", { "lineHeight": "1.5rem", "letterSpacing": "0em", "fontWeight": "400" }],
-        "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "0em", "fontWeight": "600" }],
-        "body-lg": ["1.125rem", { "lineHeight": "1.75rem", "letterSpacing": "0em", "fontWeight": "400" }],
-        "headline-md": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.01em", "fontWeight": "500" }],
-        "label-lg": ["1rem", { "lineHeight": "1.5rem", "letterSpacing": "0.01em", "fontWeight": "600" }],
-        "headline-lg-mobile": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.01em", "fontWeight": "500" }],
-        "body-sm": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "400" }],
-        "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.04em", "fontWeight": "700" }],
-        "display": ["3.5rem", { "lineHeight": "4rem", "letterSpacing": "-0.03em", "fontWeight": "400" }],
-        "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.02em", "fontWeight": "600" }],
-        "display-mobile": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.02em", "fontWeight": "500" }],
-        "headline-lg": ["2.5rem", { "lineHeight": "3rem", "letterSpacing": "-0.02em", "fontWeight": "400" }]
+    * { box-sizing: border-box; }
+    html { min-height: 100%; overflow-y: auto; scrollbar-gutter: stable; }
+    body {
+      min-width: 0;
+      min-height: 100vh;
+      margin: 0;
+      font-weight: 700;
+      overflow-y: visible;
+      background:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / 28%) 1px, transparent 1.5px) 0 0 / 24px 24px,
+        linear-gradient(160deg, #1645f5 0%, #6791ff 42%, #eef3ff 100%);
+    }
+    a, button { font: inherit; }
+    .topbar-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 14px clamp(16px, 3vw, 40px) 0;
+    }
+    .topbar {
+      width: min(100%, 1440px);
+      min-height: 76px;
+      margin: 0 auto;
+      padding: 12px clamp(16px, 2.4vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border: 1px solid rgb(255 255 255 / 34%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 16%);
+      box-shadow: 0 14px 36px rgb(8 35 133 / 16%);
+      backdrop-filter: blur(18px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #fff;
+      text-decoration: none;
+      flex: 0 0 auto;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b90069;
+      box-shadow: 0 5px 16px rgb(179 0 98 / 28%);
+    }
+    .brand-mark .material-symbols-outlined { font-size: 23px; }
+    .brand-name { font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .brand-subtitle { margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px;
+      border: 1px solid rgb(255 255 255 / 20%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 10%);
+    }
+    nav a {
+      padding: 10px 15px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    nav a[aria-current="page"] { color: #1239c8; background: #fff; }
+    .account-icon, .settings-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      color: #fff;
+    }
+    .settings-link {
+      gap: 6px;
+      padding: 9px 14px;
+      border: 1px solid rgb(255 255 255 / 35%);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .account-icon {
+      width: 38px;
+      height: 38px;
+      border: 2px solid rgb(255 255 255 / 55%);
+      border-radius: 50%;
+      background: #173ac9;
+    }
+    main {
+      min-height: calc(100vh - 90px);
+      width: min(100%, 1200px);
+      margin: 0 auto;
+      padding: 42px clamp(16px, 3vw, 40px) 38px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      align-self: flex-start;
+      margin: 0;
+      color: #fff;
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.15;
+      letter-spacing: -.04em;
+      text-shadow: 0 3px 14px rgb(12 40 127 / 18%);
+    }
+    .download-button {
+      min-height: 58px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: auto;
+      padding: 15px clamp(22px, 4vw, 38px);
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(100deg, #ff2e93, #df0872);
+      box-shadow: 0 12px 30px rgb(224 20 122 / 28%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .download-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgb(224 20 122 / 34%);
+    }
+    .download-button:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 4px;
+    }
+    .report-card {
+      width: 100%;
+      margin-top: 28px;
+      padding: clamp(20px, 3vw, 34px);
+      border: 1px solid rgb(255 255 255 / 75%);
+      border-radius: 24px;
+      background: rgb(255 255 255 / 94%);
+      box-shadow: 0 18px 48px rgb(25 54 130 / 15%);
+    }
+    .report-card h2 { margin: 0 0 6px; font-size: 22px; }
+    .report-intro { margin: 0; color: #64708a; font-size: 13px; line-height: 1.6; }
+    .report-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #eef2ff;
+    }
+    .report-meta-item { min-width: 180px; }
+    .field-label {
+      display: block;
+      margin-bottom: 5px;
+      color: #6a7691;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .field-value { color: #112653; font-size: 16px; font-weight: 700; }
+    .report-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .pain-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: 16px;
+      overflow: hidden;
+      border: 1px solid #dfe5ff;
+      border-radius: 20px;
+      background: linear-gradient(110deg, #eef2ff, #f8f9ff);
+    }
+    .pain-summary-item { min-width: 0; padding: 16px; }
+    .pain-summary-item + .pain-summary-item { border-top: 1px solid #dfe5ff; }
+    .pain-summary .field-label { margin-bottom: 8px; }
+    .pain-summary-value {
+      color: #112653;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+    .report-field {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid #e6eaff;
+      border-radius: 15px;
+      background: #fbfcff;
+    }
+    .pending-value, .reasons-list {
+      color: #77819a;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.65;
+    }
+    .reasons-list { margin: 0; padding-left: 20px; }
+    .report-status { min-height: 18px; margin: 10px 0 0; color: #fff; font-size: 12px; }
+    @media (max-width: 1200px) {
+      .topbar { flex-wrap: wrap; border-radius: 28px; }
+      nav { order: 3; width: 100%; justify-content: center; overflow-x: auto; }
+      nav a { padding-inline: 12px; }
+    }
+    @media (max-width: 680px) {
+      .topbar-wrap { padding: 8px 10px 0; }
+      .topbar { gap: 10px; min-height: 62px; padding: 10px 13px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 15px; }
+      .brand-subtitle { font-size: 8px; }
+      .settings-link { padding: 8px; font-size: 0; }
+      nav { justify-content: flex-start; }
+      nav a { font-size: 11px; }
+      .download-button { width: 100%; }
+      .pain-summary { grid-template-columns: minmax(0, 1fr); }
+      .pain-summary-item + .pain-summary-item { border-top: 1px solid #dfe5ff; border-left: 0; }
+      .report-meta-item { min-width: 100%; }
+    }
+    @media print {
+      @page { margin: 20mm; }
+      body { min-height: 0; background: #fff; }
+      .topbar-wrap, .download-button, .report-status { display: none !important; }
+      main { min-height: 0; width: 100%; padding: 0; display: block; }
+      h1 { color: #102454; text-shadow: none; }
+      .report-card { margin-top: 22px; border: 1px solid #d5d9e5; box-shadow: none; }
+      .report-meta, .pain-summary, .report-field { background: #fff; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar-wrap">
+    <header class="topbar">
+      <a class="brand" href="/dashboard">
+        <span class="brand-mark"><span class="material-symbols-outlined">vital_signs</span></span>
+        <span><span class="brand-name">LittleCare AI</span><br><span class="brand-subtitle">PEDIATRIC NEURO-SENSE</span></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a data-page-link="dashboard" href="/dashboard">Child Profile</a>
+        <a data-page-link="assessment" href="/dashboard">Assessment Launch</a>
+        <a data-page-link="camera" href="/camera-telemetry">Camera Telemetry</a>
+        <a data-page-link="disambiguation" href="/ai-disambiguation">AI Disambiguation</a>
+        <a aria-current="page" data-page-link="report" href="/pain-scale-report">Pain Scale Report</a>
+      </nav>
+      <a class="settings-link" href="/dashboard"><span class="material-symbols-outlined">settings</span> Dashboard</a>
+      <span class="account-icon" aria-label="Signed in"><span class="material-symbols-outlined">person</span></span>
+    </header>
+  </div>
+  <main>
+    <h1>Pain Scale Report</h1>
+    <section class="report-card" aria-labelledby="report-title">
+      <h2 id="report-title">Pain Scale Summary</h2>
+      <p class="report-intro">This report is ready for your AI model to populate. No pain score or clinical guidance is generated by this page.</p>
+      <div class="report-meta">
+        <div class="report-meta-item">
+          <span class="field-label">Child</span>
+          <span class="field-value" id="report-child-name">Loading from child profile…</span>
+        </div>
+        <div class="report-meta-item">
+          <span class="field-label">Created at</span>
+          <span class="field-value pending-value" id="report-created-at">Awaiting report generation</span>
+        </div>
+      </div>
+      <div class="pain-summary" aria-label="Pain score summary">
+        <div class="pain-summary-item">
+          <span class="field-label">Pain level</span>
+          <div class="pain-summary-value" id="report-pain-level">Awaiting AI model</div>
+        </div>
+        <div class="pain-summary-item">
+          <span class="field-label">Pain score (0–100)</span>
+          <div class="pain-summary-value" id="report-pain-score">Awaiting AI model</div>
+        </div>
+      </div>
+      <div class="report-grid">
+        <div class="report-field">
+          <span class="field-label">Confidence (0–100)</span>
+          <span class="pending-value" id="report-confidence">Awaiting AI model</span>
+        </div>
+        <div class="report-field">
+          <span class="field-label">Reasons</span>
+          <ul class="reasons-list" id="report-reasons"><li>Awaiting AI model</li></ul>
+        </div>
+        <div class="report-field">
+          <span class="field-label">Guidance</span>
+          <span class="pending-value" id="report-guidance">Awaiting AI model</span>
+        </div>
+      </div>
+    </section>
+    <p class="report-status" id="report-status" role="status" aria-live="polite"></p>
+    <button class="download-button" id="download-report" type="button">
+      <span class="material-symbols-outlined" aria-hidden="true">download</span>
+      <span>Download Report as PDF</span>
+    </button>
+  </main>
+  <script>
+    const reportData = {
+      child: '',
+      painLevel: null,
+      painScore: null,
+      confidence: null,
+      reasons: [],
+      guidance: null,
+      createdAt: null
+    };
+
+    function renderReport(data) {
+      document.getElementById('report-child-name').textContent = data.child || 'No child selected';
+      document.getElementById('report-pain-level').textContent = data.painLevel || 'Awaiting AI model';
+      document.getElementById('report-pain-score').textContent =
+        Number.isFinite(data.painScore) ? `${data.painScore} / 100` : 'Awaiting AI model';
+      document.getElementById('report-confidence').textContent =
+        Number.isFinite(data.confidence) ? `${data.confidence} / 100` : 'Awaiting AI model';
+      document.getElementById('report-guidance').textContent = data.guidance || 'Awaiting AI model';
+      document.getElementById('report-created-at').textContent = data.createdAt
+        ? new Date(data.createdAt).toLocaleString()
+        : 'Awaiting report generation';
+
+      const reasons = document.getElementById('report-reasons');
+      reasons.replaceChildren();
+      for (const reason of data.reasons) {
+        const item = document.createElement('li');
+        item.textContent = reason;
+        reasons.append(item);
+      }
+      if (reasons.childElementCount === 0) {
+        const item = document.createElement('li');
+        item.textContent = 'Awaiting AI model';
+        reasons.append(item);
       }
     }
-  }
-};</script></head><body class="min-h-screen bg-gradient-to-b from-[#0A3CFF] via-[#5C8DFF] to-[#F4F8FF] font-body-md text-body-md text-on-surface relative selection:bg-tertiary selection:text-on-tertiary"><div class="fixed inset-0 dot-matrix-bg pointer-events-none [mask-image:linear-gradient(to_bottom,black_20%,transparent_90%)] z-0"></div><header class="fixed top-margin left-0 right-0 z-50 flex justify-center px-margin-sm lg:px-margin"><div class="w-full max-w-[1360px] h-20 rounded-full bg-white/[0.14] backdrop-blur-md shadow-[0_16px_40px_-8px_rgba(10,60,255,0.18),0_4px_12px_0_rgba(11,27,77,0.06)] border border-white/20 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-full bg-tertiary-container flex items-center justify-center shadow-[0_4px_14px_rgba(179,0,98,0.4)] text-on-tertiary font-headline-sm text-headline-sm"><span class="material-symbols-outlined text-[20px]">vital_signs</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-primary tracking-tight leading-none drop-shadow-sm">LittleCare <span class="text-tertiary-fixed font-bold">AI</span></span><span class="font-label-sm text-label-sm text-surface-variant/90 leading-tight tracking-wider uppercase">Pediatric Neuro-Sense</span></div></div><nav class="hidden xl:flex items-center gap-space-xs bg-white/10 p-space-xs rounded-full border border-white/10" data-active-classes="bg-surface-container-lowest text-primary shadow-sm font-semibold"><a class="px-space-md py-space-xs rounded-full font-label-md text-label-md text-white/90 hover:bg-white/20 hover:text-white transition-all" data-path="child-profile" href="#">Child Profile</a><a class="px-space-md py-space-xs rounded-full font-label-md text-label-md text-white/90 hover:bg-white/20 hover:text-white transition-all" data-path="assessment-launch" href="#">Assessment Launch</a><a class="px-space-md py-space-xs rounded-full font-label-md text-label-md text-white/90 hover:bg-white/20 hover:text-white transition-all" data-path="camera-telemetry" href="#">Camera Telemetry</a><a class="px-space-md py-space-xs rounded-full font-label-md text-label-md text-white/90 hover:bg-white/20 hover:text-white transition-all" data-path="ai-disambiguation" href="#">AI Disambiguation</a><a aria-current="page" class="px-space-md py-space-xs rounded-full transition-all bg-surface-container-lowest text-primary shadow-sm font-semibold" data-path="pain-scale-report" href="#">Pain Scale Report</a></nav><div class="flex items-center gap-space-sm"><a class="hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full font-label-md text-label-md text-on-primary border border-white/30 hover:bg-white/15 hover:border-white/50 transition-all" data-path="clinical-settings" href="#"><span class="material-symbols-outlined text-[18px]">settings</span><span>Settings</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md ring-2 ring-white/30"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative z-10 w-full pt-20"><div class="w-full max-w-[1360px] mx-auto px-margin-sm lg:px-margin-lg pt-space-lg pb-space-2xl"><div class="flex flex-col w-full">
-<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-xl">
-<div class="flex flex-col gap-space-xs">
-<div class="inline-flex items-center gap-space-xs self-start px-space-md py-1 rounded-full bg-surface-container-lowest/80 backdrop-blur-md shadow-sm">
-<span class="w-2.5 h-2.5 rounded-full bg-secondary-container animate-pulse"></span>
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-bold">Validated Clinical Decision Support • Tier II SaMD</span>
-</div>
-<div class="flex items-center gap-space-sm mt-1">
-<h1 class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">Pediatric Pain Scale Dossier</h1>
-<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">v2.4 Live Calibration</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Continuous telemetry corroborated with caregiver neuro-divergent baseline profile</p>
-</div>
-<div class="flex flex-wrap items-center gap-space-sm">
-<button class="group relative inline-flex items-center gap-space-sm px-space-lg py-space-sm rounded-full bg-gradient-to-r from-[#FF2E93] to-[#E0147A] text-on-tertiary font-label-md text-label-md shadow-[0_10px_25px_-4px_rgba(255,46,147,0.45),0_4px_10px_-2px_rgba(224,20,122,0.30)] hover:scale-[1.02] active:scale-[0.98] transition-all" id="downloadPdfBtn">
-<span class="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-y-0.5">download</span>
-<span>Install / Download Report as PDF</span>
-</button>
-<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-surface-container-lowest/85 backdrop-blur-md text-on-surface font-label-md text-label-md shadow-[0_4px_14px_rgba(11,27,77,0.06)] hover:bg-surface-container-lowest hover:text-primary transition-all" id="ehrSyncBtn">
-<span class="material-symbols-outlined text-[18px] text-primary">cloud_sync</span>
-<span>Share to Pediatric EHR</span>
-</button>
-<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-surface-container-lowest/85 backdrop-blur-md text-on-surface font-label-md text-label-md shadow-[0_4px_14px_rgba(11,27,77,0.06)] hover:bg-surface-container-lowest transition-all" onclick="window.print()">
-<span class="material-symbols-outlined text-[18px] text-secondary">print</span>
-<span>Print Report</span>
-</button>
-</div>
-</div>
-<div class="relative bg-surface-container-lowest/80 backdrop-blur-xl rounded-xl shadow-[0_16px_48px_rgba(11,27,77,0.08)] p-space-md sm:p-space-xl mb-space-xl overflow-hidden">
-<div class="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-secondary-container/15 blur-3xl pointer-events-none"></div>
-<div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-tertiary-fixed-dim/20 blur-3xl pointer-events-none"></div>
-<div class="relative flex flex-col md:flex-row md:items-center justify-between pb-space-lg mb-space-lg border-b border-surface-container">
-<div class="flex items-center gap-space-md">
-<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_8px_20px_rgba(10,60,255,0.3)]">
-<span class="material-symbols-outlined text-[26px]">assignment_turned_in</span>
-</div>
-<div>
-<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">Official Pediatric Pain Scale Assessment Report</span>
-<div class="flex flex-wrap items-center gap-x-space-sm gap-y-1 mt-0.5">
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Case ID #PED-8042</span>
-<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-<span class="font-label-md text-label-md text-secondary font-medium">Validated r-FLACC + Parent Calibration Matrix</span>
-</div>
-</div>
-</div>
-<div class="mt-space-sm md:mt-0 flex items-center gap-space-sm self-start md:self-auto">
-<div class="px-space-md py-1 rounded-full bg-surface-container-high/80 text-on-surface font-label-sm text-label-sm flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-[#2BB673]"></span>
-<span>HL7 FHIR Relational Sync: Synced</span>
-</div>
-<div class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
-<span>Session #04-A</span>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-space-xl">
-<div class="bg-surface-container-low/70 rounded-lg p-space-md flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Patient Profile</span>
-<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[18px]">child_care</span>
-</div>
-</div>
-<div class="mt-space-sm">
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Leo Miller</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">3y 8m • Non-Verbal ASD Profile</p>
-<span class="inline-block mt-2 px-space-xs py-0.5 rounded bg-surface-variant/70 text-on-surface-variant font-label-sm text-label-sm">MRN: #NV-990142</span>
-</div>
-</div>
-<div class="bg-surface-container-low/70 rounded-lg p-space-md flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Attending Clinician</span>
-<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary">
-<span class="material-symbols-outlined text-[18px]">stethoscope</span>
-</div>
-</div>
-<div class="mt-space-sm">
-<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Dr. Evelyn Vance, MD</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Pediatric Neurodevelopmental Care</p>
-<span class="inline-block mt-2 text-outline font-label-sm text-label-sm">Children's Neuro-Inpatient Unit 3B</span>
-</div>
-</div>
-<div class="bg-surface-container-low/70 rounded-lg p-space-md flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Telemetry Window</span>
-<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[18px]">schedule</span>
-</div>
-</div>
-<div class="mt-space-sm">
-<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Today, 14:38 EST</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Duration: 18m 42s Optical Scan</p>
-<span class="inline-block mt-2 text-primary font-label-sm text-label-sm font-semibold">1,240 frames processed</span>
-</div>
-</div>
-<div class="bg-surface-container-low/70 rounded-lg p-space-md flex flex-col justify-between">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Baseline Stimming Factor</span>
-<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-tertiary">
-<span class="material-symbols-outlined text-[18px]">tune</span>
-</div>
-</div>
-<div class="mt-space-sm">
-<div class="flex items-baseline gap-1">
-<span class="font-headline-sm text-headline-sm text-tertiary font-bold">-1.2 pts</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Auto-Calibrated</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Parent Disambiguation Active</p>
-<span class="inline-block mt-2 text-[#2BB673] font-label-sm text-label-sm font-bold">Zero False-Positive Guard</span>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg mb-space-xl">
-<div class="lg:col-span-5 relative rounded-xl bg-gradient-to-br from-[#FF2E93] via-[#E81B82] to-[#B30062] p-space-xl text-on-tertiary shadow-[0_16px_36px_rgba(255,46,147,0.35)] overflow-hidden flex flex-col justify-between">
-<div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-<div class="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-black/10 blur-xl pointer-events-none"></div>
-<div class="relative flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-[20px] text-tertiary-fixed">thermostat</span>
-<span class="font-label-md text-label-md text-white font-semibold uppercase tracking-wider">r-FLACC Calibrated Index</span>
-</div>
-<span class="px-space-sm py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-label-sm text-label-sm">High Confidence 94.8%</span>
-</div>
-<div class="relative my-space-md flex flex-col items-center">
-<div class="relative w-56 h-32 flex items-center justify-center">
-<svg class="w-56 h-32 overflow-visible" viewbox="0 0 200 115">
-<path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.25)" stroke-linecap="round" stroke-width="18"></path>
-<path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#FFFFFF" stroke-dasharray="251.3" stroke-dashoffset="65" stroke-linecap="round" stroke-width="18"></path>
-</svg>
-<div class="absolute inset-0 top-6 flex flex-col items-center justify-center">
-<div class="flex items-baseline leading-none">
-<span class="font-display text-display font-bold text-white tracking-tighter drop-shadow-sm">7.4</span>
-<span class="font-headline-sm text-headline-sm text-white/80 font-medium">/ 10</span>
-</div>
-<span class="font-label-sm text-label-sm text-white font-bold tracking-widest uppercase mt-1">Moderate-Severe</span>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-white/90 text-center max-w-xs mt-2">
-            Neuro-behavioral translation identifies active visceral/orthopedic distress requiring swift protocol intervention.
-          </p>
-</div>
-<div class="relative bg-white/15 backdrop-blur-md rounded-lg p-space-md flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="w-3 h-3 rounded-full bg-[#E5484D] ring-2 ring-white/60 animate-ping"></span>
-<span class="font-label-md text-label-md text-white font-bold">Pain Intensity: Severe Distress</span>
-</div>
-<span class="material-symbols-outlined text-white text-[22px]">warning</span>
-</div>
-</div>
-<div class="lg:col-span-7 flex flex-col gap-space-md">
-<div class="bg-surface-container-low/60 rounded-xl p-space-lg flex flex-col justify-between h-full">
-<div class="flex items-center justify-between mb-space-sm">
-<div class="flex items-center gap-space-xs">
-<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-<span class="material-symbols-outlined text-[18px]">speed</span>
-</div>
-<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Triage Stratification Spectrum</h2>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Pediatric Neuro Standard</span>
-</div>
-<div class="grid grid-cols-3 gap-space-sm mb-space-md">
-<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 opacity-70">
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-[#2BB673]"></span>
-<span class="font-label-sm text-label-sm text-on-surface font-semibold">0 - 3.0</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Calm / Mild</span>
-<span class="font-body-sm text-body-sm text-[#2BB673] font-medium">Baseline Stasis</span>
-</div>
-<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 opacity-70">
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-[#F5A524]"></span>
-<span class="font-label-sm text-label-sm text-on-surface font-semibold">3.1 - 6.5</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Moderate Discomfort</span>
-<span class="font-body-sm text-body-sm text-[#F5A524] font-medium">Sensory Load</span>
-</div>
-<div class="p-space-sm rounded-lg bg-[#E5484D]/10 ring-1 ring-[#E5484D]/30 shadow-sm flex flex-col gap-1">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 rounded-full bg-[#E5484D]"></span>
-<span class="font-label-sm text-label-sm text-[#E5484D] font-bold">6.6 - 10.0</span>
-</div>
-<span class="material-symbols-outlined text-[#E5484D] text-[16px]">priority_high</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface font-bold">Active Pain Crisis</span>
-<span class="font-body-sm text-body-sm text-[#E5484D] font-bold">Score: 7.4 (Triggered)</span>
-</div>
-</div>
-<div class="bg-surface-container-lowest/90 rounded-lg p-space-md">
-<div class="flex items-center justify-between mb-2">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold">Real-Time Confidence Distribution</span>
-<span class="font-label-sm text-label-sm text-primary font-bold">Cross-Sensor Coherence: 96.2%</span>
-</div>
-<div class="w-full bg-surface-container h-3 rounded-full overflow-hidden flex">
-<div class="bg-primary h-full transition-all duration-500" style="width: 74%;"></div>
-<div class="bg-[#FF2E93] h-full transition-all duration-500" style="width: 22%;"></div>
-<div class="bg-secondary-container h-full transition-all duration-500" style="width: 4%;"></div>
-</div>
-<div class="flex items-center justify-between mt-2 text-on-surface-variant font-label-sm text-label-sm">
-<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Optical Telemetry (74%)</span>
-<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#FF2E93]"></span> Acoustic Prosody (22%)</span>
-<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary-container"></span> Thoracic Resp (4%)</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="mb-space-xl">
-<div class="flex items-center justify-between mb-space-md">
-<div class="flex items-center gap-space-sm">
-<div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary">
-<span class="material-symbols-outlined text-[20px]">analytics</span>
-</div>
-<div>
-<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Granular Parameter Breakdown</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Validated revised FLACC criteria with sensory disambiguation notes</p>
-</div>
-</div>
-<span class="px-space-md py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface">Total Subscore: 7.4 / 10.0</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
-<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col justify-between transition-all hover:bg-surface-container-lowest hover:shadow-md">
-<div class="flex items-start justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-primary font-bold">[F] Face Expression</span>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">2.0 / 2.0</h3>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-[#E5484D]/15 text-[#E5484D] font-label-sm text-label-sm font-bold">Max Severity</span>
-</div>
-<div class="my-space-md">
-<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-primary to-[#FF2E93] h-full rounded-full" style="width: 100%;"></div>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-            Severe sustained grimace, nasolabial deepening, and pronounced brow furrow corroborated through 3D landmark mesh.
-          </p>
-</div>
-<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col justify-between transition-all hover:bg-surface-container-lowest hover:shadow-md">
-<div class="flex items-start justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-primary font-bold">[L] Legs &amp; Lower Posture</span>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">1.8 / 2.0</h3>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-[#E5484D]/15 text-[#E5484D] font-label-sm text-label-sm font-bold">Marked</span>
-</div>
-<div class="my-space-md">
-<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-primary to-[#FF2E93] h-full rounded-full" style="width: 90%;"></div>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-            Bilateral hip/knee flexion retraction verified as involuntary abdominal guarding rather than voluntary movement.
-          </p>
-</div>
-<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col justify-between transition-all hover:bg-surface-container-lowest hover:shadow-md">
-<div class="flex items-start justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-secondary font-bold">[A] Activity &amp; Thoracic Rigidity</span>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">1.4 / 2.0</h3>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-[#F5A524]/15 text-[#F5A524] font-label-sm text-label-sm font-bold">Moderate</span>
-</div>
-<div class="my-space-md">
-<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-secondary to-[#5B8CFE] h-full rounded-full" style="width: 70%;"></div>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-            Upper extremity hand-flapping discounted as baseline stim. Rigidity localized to tense thoracic wall and clenched torso.
-          </p>
-</div>
-<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col justify-between transition-all hover:bg-surface-container-lowest hover:shadow-md">
-<div class="flex items-start justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-secondary font-bold">[C] Cry / Non-Verbal Vocalization</span>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">1.2 / 2.0</h3>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-[#F5A524]/15 text-[#F5A524] font-label-sm text-label-sm font-bold">Moderate</span>
-</div>
-<div class="my-space-md">
-<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-secondary to-[#5B8CFE] h-full rounded-full" style="width: 60%;"></div>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-            Intermittent high-pitch guttural whimpers and breath-holding patterns distinguishing somatic distress from routine protest.
-          </p>
-</div>
-<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col justify-between transition-all hover:bg-surface-container-lowest hover:shadow-md">
-<div class="flex items-start justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-[#2BB673] font-bold">[C] Consolability &amp; Sensory Threshold</span>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">1.0 / 2.0</h3>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-[#2BB673]/15 text-[#2BB673] font-label-sm text-label-sm font-bold">Partially Responsive</span>
-</div>
-<div class="my-space-md">
-<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-[#2BB673] to-secondary-container h-full rounded-full" style="width: 50%;"></div>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-            Calms briefly (15-20s) with caregiver deep-pressure weighted blanket touch, then resumes guarding post-release.
-          </p>
-</div>
-<div class="bg-surface-container-high/60 rounded-xl p-space-md flex flex-col justify-between">
-<div>
-<div class="flex items-center gap-space-xs text-primary font-label-sm text-label-sm font-bold uppercase tracking-wider">
-<span class="material-symbols-outlined text-[18px]">verified</span>
-<span>Telemetry Corroboration</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface mt-2 font-medium">
-              Multi-angle optical depth sensor tracked 42 distinct micro-spasms during the 18-minute session.
-            </p>
-</div>
-<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Artifact Filtering</span>
-<span class="font-label-sm text-label-sm text-[#2BB673] font-bold">Passed (Zero Occlusion)</span>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl bg-gradient-to-br from-surface-container-low to-surface-variant/40 p-space-lg mb-space-xl">
-<div class="flex items-center gap-space-sm mb-space-md">
-<div class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-on-secondary">
-<span class="material-symbols-outlined text-[20px]">family_restroom</span>
-</div>
-<div>
-<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Parent Input Integration &amp; Baseline Disambiguation</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">How caregiver live calibration dynamically optimized the final clinical metric</p>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-<div class="p-space-md rounded-lg bg-surface-container-lowest/90 shadow-sm flex flex-col justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-primary font-bold uppercase">Mother's Live Observation</span>
-<p class="font-body-md text-body-md text-on-surface mt-1 italic">
-              "Leo flaps his fingers rapidly when thrilled or overwhelmed by ceiling fans. That is not pain, but pulling both knees up to his ribcage is distinctly rare."
-            </p>
-</div>
-<div class="mt-space-md pt-2 border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center justify-between">
-<span>Input Timestamp</span>
-<span class="font-semibold text-on-surface">14:41:05 (Caregiver App)</span>
-</div>
-</div>
-<div class="p-space-md rounded-lg bg-surface-container-lowest/90 shadow-sm flex flex-col justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-tertiary font-bold uppercase">Algorithmic Baseline Offset</span>
-<div class="flex items-center gap-2 mt-2">
-<span class="font-headline-md text-headline-md text-tertiary font-bold">-1.20</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Point Reduction</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              Subtracted sensory flapping stim weight from FLACC Activity score, preventing an erroneous 8.6/10 hyper-escalation.
-            </p>
-</div>
-<div class="mt-space-md pt-2 border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center justify-between">
-<span>Specificity Gain</span>
-<span class="text-[#2BB673] font-bold">+28.4% Diagnostic Purity</span>
-</div>
-</div>
-<div class="p-space-md rounded-lg bg-surface-container-lowest/90 shadow-sm flex flex-col justify-between">
-<div>
-<span class="font-label-sm text-label-sm text-[#2BB673] font-bold uppercase">Sensory Environment Vector</span>
-<div class="flex items-center gap-2 mt-2">
-<span class="material-symbols-outlined text-[#2BB673] text-[24px]">wb_twilight</span>
-<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Overload Excluded</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              Ambient decibels (41 dB) and illuminance (120 lux) remained within calming thresholds, confirming pain etiology is somatic.
-            </p>
-</div>
-<div class="mt-space-md pt-2 border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center justify-between">
-<span>Neuro Profile Status</span>
-<span class="text-primary font-bold">Validated Stable</span>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm mb-space-md">
-<div class="flex items-center gap-space-sm mb-space-md">
-<div class="w-9 h-9 rounded-full bg-[#FF2E93] text-on-tertiary flex items-center justify-center">
-<span class="material-symbols-outlined text-[20px]">medical_services</span>
-</div>
-<div>
-<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Clinical Action Recommendations</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Recommended multi-modal clinical interventions based on 7.4/10 Moderate-Severe score</p>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col justify-between">
-<div>
-<div class="flex items-center gap-2 mb-2">
-<span class="px-2 py-0.5 rounded-full bg-[#E5484D]/15 text-[#E5484D] font-label-sm text-label-sm font-bold">Immediate</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Pharmacologic</span>
-</div>
-<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Analgesic Titration Protocol</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              Administer weight-based Acetaminophen (15mg/kg PO/PR) or IV Ibuprofen (10mg/kg). Consider Low-dose Sublingual Fentanyl only under direct attending order if guarding persists &gt; 30m.
-            </p>
-</div>
-<div class="mt-space-md text-primary font-label-sm text-label-sm font-bold flex items-center gap-1">
-<span>Weight Ref: 14.8 kg</span>
-<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-</div>
-</div>
-<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col justify-between">
-<div>
-<div class="flex items-center gap-2 mb-2">
-<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">Continuous</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Environmental</span>
-</div>
-<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Sensory Dimming Protocol</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              Dim room lighting below 60 lux. Minimize clinical monitor acoustic alerts to lowest audible threshold. Restrict nursing examinations to coordinated bundled clusters.
-            </p>
-</div>
-<div class="mt-space-md text-secondary font-label-sm text-label-sm font-bold flex items-center gap-1">
-<span>Sensory Tier: ASD Grade 2</span>
-<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-</div>
-</div>
-<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col justify-between">
-<div>
-<div class="flex items-center gap-2 mb-2">
-<span class="px-2 py-0.5 rounded-full bg-[#2BB673]/20 text-[#2BB673] font-label-sm text-label-sm font-bold">Caregiver-Led</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Non-Pharmacologic</span>
-</div>
-<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Deep Pressure Consoling</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              Deploy approved 3.5 lb weighted lap blanket over lower extremities with mother present at left bedside. Maintain lateral recumbent posture with soft hip pillow support.
-            </p>
-</div>
-<div class="mt-space-md text-[#2BB673] font-label-sm text-label-sm font-bold flex items-center gap-1">
-<span>Protocol: Comfort-ASD-03</span>
-<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl bg-gradient-to-r from-primary to-[#001847] p-space-lg text-on-primary shadow-xl flex flex-col md:flex-row items-center justify-between gap-space-lg relative overflow-hidden">
-<div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-secondary-container/20 blur-2xl pointer-events-none"></div>
-<div class="flex items-center gap-space-md z-10">
-<div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-[26px] text-tertiary-fixed">shield_lock</span>
-</div>
-<div>
-<div class="flex items-center gap-2">
-<h3 class="font-headline-sm text-headline-sm font-semibold">Report Audit Seal &amp; Archival Verification</h3>
-<span class="px-2 py-0.5 rounded-full bg-[#2BB673]/30 text-white font-label-sm text-label-sm font-bold">SHA-256 Validated</span>
-</div>
-<p class="font-body-sm text-body-sm text-surface-variant max-w-2xl mt-0.5">
-          This document is cryptographically sealed for EHR transfer into Epic MyChart &amp; Cerner Millennium. Export adheres strictly to HL7 FHIR US-Core Pediatric Observation guidelines.
-        </p>
-</div>
-</div>
-<div class="flex items-center gap-space-sm z-10 shrink-0">
-<button class="inline-flex items-center gap-space-sm px-space-lg py-space-sm rounded-full bg-gradient-to-r from-[#FF2E93] to-[#E0147A] text-white font-label-md text-label-md shadow-[0_8px_24px_rgba(255,46,147,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all" id="downloadPdfBannerBtn">
-<span class="material-symbols-outlined text-[20px]">file_download</span>
-<span>Download Dossier PDF</span>
-</button>
-</div>
-</div>
-</div>
-<script>
-  function triggerMockDownload() {
-    const originalText = this.innerHTML;
-    this.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Compiling Clinical PDF...</span>';
-    this.disabled = true;
-    setTimeout(() => {
-      this.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span><span>PDF Downloaded (PED-8042.pdf)</span>';
-      setTimeout(() => {
-        this.innerHTML = originalText;
-        this.disabled = false;
-      }, 2500);
-    }, 1200);
-  }
 
-  const downloadBtn1 = document.getElementById('downloadPdfBtn');
-  const downloadBtn2 = document.getElementById('downloadPdfBannerBtn');
-  const ehrBtn = document.getElementById('ehrSyncBtn');
+    async function loadChildName() {
+      const params = new URLSearchParams(location.search);
+      const profileId = params.get('profileId') || sessionStorage.getItem('littlecare_profile_id');
+      const status = document.getElementById('report-status');
+      const routes = {
+        dashboard: '/dashboard',
+        assessment: '/assessment-launch',
+        camera: '/camera-telemetry',
+        disambiguation: '/ai-disambiguation',
+        report: '/pain-scale-report'
+      };
 
-  if (downloadBtn1) downloadBtn1.addEventListener('click', triggerMockDownload);
-  if (downloadBtn2) downloadBtn2.addEventListener('click', triggerMockDownload);
+      if (profileId && /^[1-9]\d{0,17}$/.test(profileId)) {
+        sessionStorage.setItem('littlecare_profile_id', profileId);
+        for (const [page, route] of Object.entries(routes)) {
+          document.querySelector(`[data-page-link="${page}"]`).href =
+            `${route}?profileId=${encodeURIComponent(profileId)}`;
+        }
 
-  if (ehrBtn) {
-    ehrBtn.addEventListener('click', function() {
-      const orig = this.innerHTML;
-      this.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-pulse">cloud_upload</span><span>Syncing with Epic EHR...</span>';
-      setTimeout(() => {
-        this.innerHTML = '<span class="material-symbols-outlined text-[18px] text-[#2BB673]">cloud_done</span><span class="text-[#2BB673]">Synced Successfully</span>';
-        setTimeout(() => {
-          this.innerHTML = orig;
-        }, 2500);
-      }, 1000);
-    });
-  }
-</script></div></main><footer class="relative z-10 w-full bg-white/70 backdrop-blur-xl border-t border-white/60 py-space-xl mt-space-2xl"><div class="w-full max-w-[1360px] mx-auto px-margin-sm lg:px-margin-lg flex flex-col md:flex-row items-center justify-between gap-space-lg text-center md:text-left"><div class="flex flex-col gap-space-xs"><div class="flex items-center justify-center md:justify-start gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-secondary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface font-bold uppercase tracking-wider">Clinical Decision Support Architecture</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-xl">LittleCare AI facilitates observational pain translation (FLACC/NCCPC-R metrics) for non-verbal pediatric cases. Strictly adjunct advisory; clinical evaluation required.</p></div><div class="flex flex-col md:items-end gap-space-xs font-label-sm text-label-sm text-on-surface-variant"><div class="flex items-center justify-center md:justify-end gap-space-md"><span class="inline-flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[16px] text-primary">verified_user</span> HIPAA Compliant</span><span class="inline-flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[16px] text-primary">health_and_safety</span> FDA SaMD Tier II Protocol</span></div><p class="text-outline">© 2024 LittleCare AI Technologies Inc. All rights reserved.</p></div></div></footer></body></html>
+        try {
+          const response = await fetch('/api/child-profiles');
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not load child profiles.');
+          const profile = result.profiles.find((item) => item.id === profileId);
+          if (!profile) throw new Error('The selected child profile was not found.');
+          reportData.child = profile.displayName;
+          renderReport(reportData);
+        } catch (error) {
+          document.getElementById('report-child-name').textContent = 'Could not load child name';
+          status.textContent = error.message || 'Could not load child profile.';
+          console.error('Report child profile could not be loaded:', error);
+        }
+      } else {
+        document.getElementById('report-child-name').textContent = 'Select a child from the dashboard';
+        status.textContent = 'No child profile was selected for this report.';
+      }
+    }
+
+    renderReport(reportData);
+    loadChildName();
+    document.getElementById('download-report').addEventListener('click', () => window.print());
+  </script>
+</body>
+</html>
