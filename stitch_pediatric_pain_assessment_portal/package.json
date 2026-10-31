@@ -1,0 +1,17 @@
+{
+  "name": "littlecare-auth-demo",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "check": "node --check server.mjs && node --check setup-local-db.mjs",
+    "setup:local-db": "node setup-local-db.mjs"
+  },
+  "dependencies": {
+    "google-auth-library": "^11.3.2",
+    "pg": "^8.16.3"
+  }
+}

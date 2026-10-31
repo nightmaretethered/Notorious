@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1745ef">
+  <title>Assessment Launch | LittleCare AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: #102454;
+      background: #eaf0ff;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 0;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / 28%) 1px, transparent 1.5px) 0 0 / 24px 24px,
+        linear-gradient(160deg, #1645f5 0%, #6791ff 42%, #eef3ff 100%);
+    }
+    button, input, select { font: inherit; }
+    a { color: inherit; }
+    .topbar-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 14px clamp(16px, 3vw, 40px) 0;
+    }
+    .topbar {
+      width: min(100%, 1440px);
+      min-height: 76px;
+      margin: 0 auto;
+      padding: 12px clamp(16px, 2.4vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border: 1px solid rgb(255 255 255 / 34%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 16%);
+      box-shadow: 0 14px 36px rgb(8 35 133 / 16%);
+      backdrop-filter: blur(18px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #fff;
+      text-decoration: none;
+      flex: 0 0 auto;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b90069;
+      box-shadow: 0 5px 16px rgb(179 0 98 / 28%);
+    }
+    .brand-mark .material-symbols-outlined { font-size: 23px; }
+    .brand-name { font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .brand-subtitle { margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px;
+      border: 1px solid rgb(255 255 255 / 20%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 10%);
+    }
+    nav a {
+      padding: 10px 15px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    nav a[aria-current="page"] { color: #1239c8; background: #fff; }
+    nav a[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+    .account-icon, .settings-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      color: #fff;
+    }
+    .settings-link {
+      gap: 6px;
+      padding: 9px 14px;
+      border: 1px solid rgb(255 255 255 / 35%);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .account-icon {
+      width: 38px;
+      height: 38px;
+      border: 2px solid rgb(255 255 255 / 55%);
+      border-radius: 50%;
+      background: #173ac9;
+    }
+    main {
+      width: min(100%, 1200px);
+      margin: 0 auto;
+      padding: 38px clamp(16px, 3vw, 40px) 56px;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .eyebrow .material-symbols-outlined { font-size: 20px; }
+    h1 {
+      margin: 12px 0 8px;
+      color: #fff;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -.04em;
+      text-shadow: 0 3px 14px rgb(12 40 127 / 18%);
+    }
+    .intro {
+      max-width: 760px;
+      margin: 0;
+      color: #e9efff;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 25px 0 20px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid rgb(255 255 255 / 30%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 10%);
+    }
+    .step.active { color: #1739bf; background: #fff; }
+    .step-number {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgb(255 255 255 / 22%);
+    }
+    .step.active .step-number { color: #fff; background: #1745ef; }
+    .step-line { width: clamp(16px, 4vw, 48px); height: 1px; background: rgb(255 255 255 / 44%); }
+    .assessment-card {
+      padding: clamp(20px, 3vw, 38px);
+      border: 1px solid rgb(255 255 255 / 72%);
+      border-radius: 28px;
+      background: rgb(255 255 255 / 92%);
+      box-shadow: 0 20px 55px rgb(25 54 130 / 15%);
+    }
+    .card-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid #e6eaff;
+    }
+    .card-heading h2 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
+    .card-heading p { margin: 7px 0 0; color: #63708e; font-size: 13px; line-height: 1.55; }
+    .child-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      max-width: 45%;
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: #eef1ff;
+      color: #1638bd;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .child-badge span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      padding-top: 22px;
+    }
+    .question {
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid #e7eaff;
+      border-radius: 20px;
+      background: #f8f9ff;
+    }
+    .question.full { grid-column: 1 / -1; }
+    .question-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 8px;
+      color: #112653;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .question-title .material-symbols-outlined { color: #1745ef; font-size: 21px; }
+    .hint { margin: 0 0 15px; color: #68748e; font-size: 12px; line-height: 1.5; }
+    .field-row { display: flex; align-items: center; gap: 10px; }
+    .field-row input, .field-row select {
+      width: 100%;
+      min-width: 0;
+      height: 46px;
+      padding: 0 13px;
+      border: 1px solid #d7ddf4;
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+      color: #112653;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .field-row input:focus, .field-row select:focus { border-color: #3159f1; box-shadow: 0 0 0 3px rgb(49 89 241 / 13%); }
+    .unit-select { max-width: 105px; }
+    .bp-field { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); align-items: center; gap: 10px; }
+    .bp-separator { color: #77819c; text-align: center; font-weight: 800; }
+    .yes-no-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .yes-no-option {
+      position: relative;
+      min-height: 48px;
+    }
+    .yes-no-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+    .yes-no-option span {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid #d7ddf4;
+      border-radius: 13px;
+      background: #fff;
+      color: #34446c;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s;
+    }
+    .yes-no-option input:checked + span {
+      border-color: #3159f1;
+      background: #e9edff;
+      color: #173cc8;
+      box-shadow: 0 0 0 3px rgb(49 89 241 / 10%);
+    }
+    .yes-no-option input:focus-visible + span {
+      outline: 3px solid rgb(49 89 241 / 35%);
+      outline-offset: 2px;
+    }
+    .form-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-top: 18px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: #edf3ff;
+      color: #4b5c82;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .form-note .material-symbols-outlined { color: #1745ef; font-size: 19px; }
+    .form-error { margin: 16px 0 0; color: #b42318; font-size: 13px; font-weight: 700; }
+    .form-error:empty { display: none; }
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 22px;
+    }
+    .back-link, .continue-button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .back-link { border: 1px solid #dbe1f4; background: #fff; color: #34446c; }
+    .continue-button { border: 0; background: linear-gradient(100deg, #ff2e93, #df0872); color: #fff; box-shadow: 0 8px 22px rgb(224 20 122 / 22%); cursor: pointer; }
+    .continue-button:disabled { opacity: .65; cursor: wait; }
+    .load-status { min-height: 18px; margin: 11px 0 0; color: #fff; font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1080px) {
+      .topbar { flex-wrap: wrap; border-radius: 28px; }
+      nav { order: 3; width: 100%; justify-content: center; overflow-x: auto; }
+      nav a { padding-inline: 12px; }
+    }
+    @media (max-width: 680px) {
+      .topbar-wrap { padding: 8px 10px 0; }
+      .topbar { gap: 10px; min-height: 62px; padding: 10px 13px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 15px; }
+      .brand-subtitle { font-size: 8px; }
+      .settings-link { padding: 8px; font-size: 0; }
+      nav { justify-content: flex-start; }
+      nav a { font-size: 11px; }
+      main { padding-top: 27px; }
+      .intro { font-size: 14px; }
+      .stepper { gap: 5px; font-size: 10px; }
+      .step { gap: 5px; padding: 7px 8px; }
+      .step-number { width: 19px; height: 19px; }
+      .assessment-card { border-radius: 21px; }
+      .card-heading { flex-direction: column; }
+      .child-badge { max-width: 100%; }
+      .form-grid { grid-template-columns: minmax(0, 1fr); }
+      .question.full { grid-column: auto; }
+      .form-actions { align-items: stretch; flex-direction: column-reverse; }
+      .form-actions a, .form-actions button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar-wrap">
+    <header class="topbar">
+      <a class="brand" href="/dashboard">
+        <span class="brand-mark"><span class="material-symbols-outlined">vital_signs</span></span>
+        <span><span class="brand-name">LittleCare AI</span><br><span class="brand-subtitle">PEDIATRIC NEURO-SENSE</span></span>
+      </a>
+      <nav aria-label="Assessment progress">
+        <a href="/dashboard">Child Profile</a>
+        <a aria-current="page" href="#assessment-form">Assessment Launch</a>
+        <a aria-disabled="true" href="#" id="camera-nav-link">Camera Telemetry</a>
+      </nav>
+      <a class="settings-link" href="/dashboard"><span class="material-symbols-outlined">settings</span> Dashboard</a>
+      <span class="account-icon" aria-label="Signed in"><span class="material-symbols-outlined">person</span></span>
+    </header>
+  </div>
+
+  <main>
+    <div class="eyebrow"><span class="material-symbols-outlined">assignment</span> Assessment preparation</div>
+    <h1>Assessment Launch</h1>
+    <p class="intro">Record a few current observations before continuing to the camera assessment. These answers are saved to the selected child’s profile.</p>
+
+    <div class="stepper" aria-label="Assessment steps">
+      <span class="step"><span class="step-number">1</span> Child profile</span>
+      <span class="step-line"></span>
+      <span class="step active"><span class="step-number">2</span> Observations</span>
+      <span class="step-line"></span>
+      <span class="step"><span class="step-number">3</span> Camera</span>
+    </div>
+    <p class="load-status" id="load-status" role="status" aria-live="polite"></p>
+
+    <section class="assessment-card" aria-labelledby="form-title">
+      <div class="card-heading">
+        <div>
+          <h2 id="form-title">Current health observations</h2>
+          <p>Enter the values available to you and choose yes or no for the current observations.</p>
+        </div>
+        <span class="child-badge"><span class="material-symbols-outlined">child_care</span><span id="child-name">Loading child profile…</span></span>
+      </div>
+
+      <form id="assessment-form">
+        <div class="form-grid">
+          <div class="question">
+            <label class="question-title" for="temperature"><span class="material-symbols-outlined">device_thermostat</span>What is the body temperature?</label>
+            <p class="hint">Enter the temperature reading. Choose Celsius or Fahrenheit.</p>
+            <div class="field-row">
+              <input id="temperature" name="temperature" type="number" min="25" max="45" step="0.1" inputmode="decimal" placeholder="e.g. 37.0" required>
+              <select aria-label="Temperature unit" class="unit-select" id="temperature-unit" name="temperatureUnit">
+                <option value="C">°C</option>
+                <option value="F">°F</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="question">
+            <div class="question-title"><span class="material-symbols-outlined">restaurant</span>Has the baby been eating properly?</div>
+            <p class="hint">Select yes or no based on the baby’s eating today.</p>
+            <div class="yes-no-options" role="radiogroup" aria-label="Has the baby been eating properly?">
+              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="true" required><span>Yes</span></label>
+              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="false" required><span>No</span></label>
+            </div>
+          </div>
+
+          <div class="question">
+            <div class="question-title"><span class="material-symbols-outlined">child_friendly</span>Have bowel movements been normal?</div>
+            <p class="hint">Select yes or no based on the baby’s usual pattern.</p>
+            <div class="yes-no-options" role="radiogroup" aria-label="Have bowel movements been normal?">
+              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="true" required><span>Yes</span></label>
+              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="false" required><span>No</span></label>
+            </div>
+          </div>
+
+          <div class="question">
+            <div class="question-title"><span class="material-symbols-outlined">favorite</span>Blood pressure <span style="font-size:11px;color:#71809e;font-weight:600">(optional)</span></div>
+            <p class="hint">Enter systolic and diastolic values in mmHg, if known.</p>
+            <div class="bp-field">
+              <label class="sr-only" for="blood-pressure-systolic">Systolic blood pressure</label>
+              <input id="blood-pressure-systolic" name="bloodPressureSystolic" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Systolic">
+              <span class="bp-separator">/</span>
+              <label class="sr-only" for="blood-pressure-diastolic">Diastolic blood pressure</label>
+              <input id="blood-pressure-diastolic" name="bloodPressureDiastolic" type="number" min="1" max="300" step="1" inputmode="numeric" placeholder="Diastolic">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-note"><span class="material-symbols-outlined">info</span><span>These are caregiver-entered observations for this prototype, not a medical assessment or diagnosis. Follow your clinician’s guidance for interpreting measurements.</span></div>
+        <p class="form-error" id="form-error" role="alert"></p>
+        <div class="form-actions">
+          <a class="back-link" href="/dashboard"><span class="material-symbols-outlined">arrow_back</span> Back to child profile</a>
+          <button class="continue-button" id="continue-button" type="submit"><span>Save and continue to camera</span><span class="material-symbols-outlined">arrow_forward</span></button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(location.search);
+      const profileId = params.get('profileId');
+      const form = document.getElementById('assessment-form');
+      const submitButton = document.getElementById('continue-button');
+      const errorElement = document.getElementById('form-error');
+      const statusElement = document.getElementById('load-status');
+      const temperatureInput = document.getElementById('temperature');
+      const temperatureUnit = document.getElementById('temperature-unit');
+      let profileReady = false;
+
+      function setRadioValue(name, value) {
+        if (typeof value !== 'boolean') return;
+        const option = form.querySelector(`input[name="${name}"][value="${String(value)}"]`);
+        if (option) option.checked = true;
+      }
+
+      temperatureUnit.addEventListener('change', () => {
+        if (temperatureInput.value === '') return;
+        const current = Number(temperatureInput.value);
+        const converted = temperatureUnit.value === 'F'
+          ? current * 9 / 5 + 32
+          : (current - 32) * 5 / 9;
+        temperatureInput.value = (Math.round(converted * 10) / 10).toFixed(1);
+        temperatureInput.min = temperatureUnit.value === 'F' ? '77' : '25';
+        temperatureInput.max = temperatureUnit.value === 'F' ? '113' : '45';
+      });
+
+      if (!profileId || !/^[1-9]\d{0,17}$/.test(profileId)) {
+        statusElement.textContent = 'Choose a saved child profile before starting an assessment.';
+        document.getElementById('child-name').textContent = 'No profile selected';
+        form.querySelectorAll('input, select, button').forEach((input) => { input.disabled = true; });
+        return;
+      }
+
+      try {
+        const profilesResponse = await fetch('/api/child-profiles');
+        const profilesResult = await profilesResponse.json();
+        if (!profilesResponse.ok) throw new Error(profilesResult.error || 'Could not load child profiles.');
+        const profile = profilesResult.profiles.find((item) => item.id === profileId);
+        if (!profile) throw new Error('That child profile was not found. Return to the dashboard and select a profile.');
+        document.getElementById('child-name').textContent = profile.displayName;
+        profileReady = true;
+
+        const latestResponse = await fetch(`/api/child-profiles/${encodeURIComponent(profileId)}/assessments/latest`);
+        const latestResult = await latestResponse.json();
+        if (!latestResponse.ok) throw new Error(latestResult.error || 'Could not load the latest assessment.');
+        if (latestResult.assessment) {
+          const previous = latestResult.assessment;
+          temperatureInput.value = previous.temperature;
+          temperatureUnit.value = previous.temperatureUnit;
+          temperatureInput.min = previous.temperatureUnit === 'F' ? '77' : '25';
+          temperatureInput.max = previous.temperatureUnit === 'F' ? '113' : '45';
+          setRadioValue('eatingProperly', previous.eatingProperly);
+          setRadioValue('bowelMovementNormal', previous.bowelMovementNormal);
+          document.getElementById('blood-pressure-systolic').value = previous.bloodPressureSystolic ?? '';
+          document.getElementById('blood-pressure-diastolic').value = previous.bloodPressureDiastolic ?? '';
+          statusElement.textContent = previous.eatingProperly === null || previous.bowelMovementNormal === null
+            ? 'Previous observations used an older scale. Please choose yes or no for both questions.'
+            : 'Most recent saved observations loaded. Save again to record a new set.';
+          const cameraLink = document.getElementById('camera-nav-link');
+          cameraLink.href = `/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(previous.id)}`;
+          cameraLink.setAttribute('aria-disabled', 'false');
+        }
+      } catch (error) {
+        statusElement.textContent = error.message || 'Could not load this child profile.';
+        profileReady = false;
+        console.error('Assessment launch could not be initialized:', error);
+      }
+
+      document.getElementById('camera-nav-link').addEventListener('click', (event) => {
+        if (event.currentTarget.getAttribute('aria-disabled') === 'true') event.preventDefault();
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        errorElement.textContent = '';
+        if (!profileReady) {
+          errorElement.textContent = 'Select a saved child profile before continuing.';
+          return;
+        }
+        if (!form.reportValidity()) return;
+
+        const systolicValue = document.getElementById('blood-pressure-systolic').value;
+        const diastolicValue = document.getElementById('blood-pressure-diastolic').value;
+        const eatingAnswer = form.querySelector('input[name="eatingProperly"]:checked');
+        const bowelAnswer = form.querySelector('input[name="bowelMovementNormal"]:checked');
+        const payload = {
+          temperature: Number(temperatureInput.value),
+          temperatureUnit: temperatureUnit.value,
+          eatingProperly: eatingAnswer?.value === 'true',
+          bowelMovementNormal: bowelAnswer?.value === 'true',
+          bloodPressureSystolic: systolicValue === '' ? null : Number(systolicValue),
+          bloodPressureDiastolic: diastolicValue === '' ? null : Number(diastolicValue)
+        };
+        submitButton.disabled = true;
+        submitButton.querySelector('span:first-child').textContent = 'Saving observations…';
+        try {
+          const response = await fetch(`/api/child-profiles/${encodeURIComponent(profileId)}/assessments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not save these observations.');
+          location.assign(`/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(result.assessment.id)}`);
+        } catch (error) {
+          errorElement.textContent = error.message || 'Could not save these observations. Please try again.';
+          console.error('Assessment observations could not be saved:', error);
+          submitButton.disabled = false;
+          submitButton.querySelector('span:first-child').textContent = 'Save and continue to camera';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
