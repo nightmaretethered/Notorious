@@ -197,6 +197,7 @@ body > main > div:first-child {
 </div>
 </div>
 </div>
+<p class="font-body-sm text-body-sm text-surface-variant mb-space-sm" id="signed-in-user" aria-live="polite">Loading signed-in account…</p>
 <p class="font-body-sm text-body-sm text-surface-variant mb-space-md" id="profile-load-status" role="status" aria-live="polite"></p>
 <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg mb-space-xl" id="child-profile-grid">
 <div class="xl:col-span-12 min-w-0 bg-surface-container-lowest/85 backdrop-blur-xl rounded-[24px] p-space-md sm:p-space-xl shadow-xl flex flex-col justify-between relative overflow-hidden" id="child-profile-card">
@@ -635,6 +636,18 @@ body > main > div:first-child {
         }
       }
 
+      async function loadSignedInUser() {
+        try {
+          const response = await fetch('/api/auth/me');
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not load the signed-in account.');
+          document.getElementById('signed-in-user').textContent = `Signed in as ${result.user.email}`;
+        } catch (error) {
+          document.getElementById('signed-in-user').textContent = 'Could not load signed-in account details.';
+          console.error('Signed-in account could not be loaded:', error);
+        }
+      }
+
       document.getElementById('create-profile-button').addEventListener('click', () => openEditor());
       scanQrButton.addEventListener('click', openQrScanner);
       document.getElementById('close-qr-scanner').addEventListener('click', closeQrScanner);
@@ -724,6 +737,7 @@ body > main > div:first-child {
         }
       });
 
+      loadSignedInUser();
       loadProfiles();
     });
   </script>
