@@ -29,4 +29,4 @@ The dashboard also supports creating a child profile from a QR code. The QR payl
 3. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback` to the local `.env` file. Keep the client secret private.
 4. Restart the server with `npm start`. The Google button becomes available when the server sees both credentials.
 
-The callback verifies Google's ID token, verified email, nonce, and OAuth state before creating a local session.
+The callback verifies Google's ID token, verified email, nonce, and OAuth state before creating a local session. Google sign-in does not automatically link to an existing password account by email; use that account's password to sign in instead.

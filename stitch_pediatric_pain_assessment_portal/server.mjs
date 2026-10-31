@@ -700,8 +700,8 @@ async function completeGoogleOAuth(request, response, url) {
         `INSERT INTO users (email, password_salt, password_hash, google_sub)
          VALUES ($1, NULL, NULL, $2)
          ON CONFLICT (email) DO UPDATE
-         SET google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)
-         WHERE (users.google_sub IS NULL OR users.google_sub = EXCLUDED.google_sub)
+         SET google_sub = EXCLUDED.google_sub
+         WHERE users.google_sub = EXCLUDED.google_sub
            AND users.hospital_id IS NULL
          RETURNING id, email`,
         [email, identity.sub]
