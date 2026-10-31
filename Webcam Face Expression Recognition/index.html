@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webcam Face Expression Recognition</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 16px/1.5 system-ui, sans-serif;
+      color: #17212b;
+      background: #f3f6f8;
+    }
+
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 { margin: 0 0 16px; }
+
+    .camera {
+      position: relative;
+      width: min(100%, 640px);
+      margin: 0 auto;
+      background: #101820;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    video, canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    label { display: inline-flex; align-items: center; gap: 8px; }
+
+    select, button {
+      font: inherit;
+      padding: 8px 12px;
+    }
+
+    #status { min-height: 1.5em; }
+
+    @media (max-width: 520px) {
+      body { padding: 16px; }
+    }
+  </style>
+  <script defer src="/face-api.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <h1>Webcam Face Expression Recognition</h1>
+  <div class="camera">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div class="controls">
+    <label for="inputSize">Detector size
+      <select id="inputSize">
+        <option value="128" selected>128 (fastest)</option>
+        <option value="160">160</option>
+        <option value="224">224</option>
+      </select>
+    </label>
+    <button id="startButton" type="button" disabled>Starting...</button>
+    <label><input id="hideBoxes" type="checkbox"> Hide face box</label>
+    <span>Inference: <strong id="time">-</strong></span>
+    <span>Estimated FPS: <strong id="fps">-</strong></span>
+  </div>
+  <p id="status" role="status">Loading models and requesting camera access...</p>
+</body>
+</html>

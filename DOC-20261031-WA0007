@@ -1,0 +1,153 @@
+# Data Recording Script: Teachable Machine Models
+
+What each teammate records for the face, pose, and audio models of the Pediatric Pain Scale Translator
+
+## Ground rules
+
+- Record only teammates and other consenting adults acting out each expression, pose, and sound. Do not use photos or recordings of real children without consent.
+- Use exactly the same three class names in all models, in lowercase: **calm**, **mild**, **severe**. The audio model also needs a first class named **Background Noise**.
+- Keep every class in a model about the same size, or the model will lean toward the biggest class.
+- The recorded data is acted adult data. It demonstrates the pipeline and is not clinical evidence. Say this in the pitch.
+- Record in conditions close to the demo: same laptop camera, same room, same distance.
+
+## Targets
+
+| Model | Classes | Samples per class | Sample type |
+| --- | --- | --- | --- |
+| Face (Image Project) | calm, mild, severe | 100 to 200 | Webcam photos |
+| Pose (Pose Project) | calm, mild, severe | 100 to 200 | Webcam poses |
+| Audio (Audio Project) | Background Noise, calm, mild, severe | Background Noise 20 or more at 2 seconds. Others 30 or more at 1 second (minimum 8) | Microphone clips |
+
+## Who records what
+
+Each model should include at least two different people, so the model learns the expression and not one face.
+
+- Person A (AI member): trains the models. Records face and pose with Person B, audio with Person C.
+- Person B: records face and pose samples.
+- Person C: records audio samples and extra face samples.
+- Everyone records at least 30 samples of each face class, so the model sees three faces.
+
+## Setup checklist
+
+- Camera at eye level, face fully visible and well lit from the front. Avoid a bright window behind you.
+- Plain background if possible.
+- Sit at the same distance you will be at in the demo, about an arm's length.
+- Close other apps that use the camera or microphone.
+- Allow camera and microphone permission in the browser.
+
+## Model 1: Face (Image Project)
+
+Hold each expression steadily while the webcam captures. Move your head slightly between bursts so the model sees small variations.
+
+**calm**
+
+- Relaxed face, eyebrows level and smooth.
+- Eyes open and soft, or gently closed as if resting.
+- Mouth closed, or very slightly open.
+- Variations: looking at the camera, looking slightly away, head tilted a little.
+
+**mild**
+
+- Eyebrows pulled slightly down and together.
+- Small frown, lips pressed together or pulled to one side.
+- Eyes slightly narrowed or scrunched.
+- Variations: wincing slightly, grimace with mouth closed, a fussy pout.
+
+**severe**
+
+- Eyebrows strongly lowered and drawn together.
+- Eyes squeezed tightly shut.
+- Deep crease running from the nose to the corners of the mouth.
+- Mouth wide open, as in crying out, or stretched into a square shape.
+- Variations: head back, head forward, one hand near the face.
+
+Tip: make the expressions clear and a little exaggerated, but keep each class distinct from the next.
+
+## Model 2: Pose (Pose Project)
+
+Keep the camera framing the same as in the demo, with the upper body and legs visible if possible. Capture each pose from slightly different angles.
+
+**calm**
+
+- Relaxed body, shoulders down.
+- Arms and legs loose and still, hands resting.
+- Lying back or sitting at ease.
+
+**mild**
+
+- Restless movement: shifting position, wriggling.
+- Hands moving to the face or tummy.
+- Legs shifting or bending slightly.
+- Shoulders slightly raised.
+
+**severe**
+
+- Knees pulled up toward the chest.
+- Arms stiff and held tight against the body, or fists clenched.
+- Body curled up, or back arched.
+- Hands clutching the stomach or holding the body.
+
+Tip: record the severe poses seated or lying down in a safe, comfortable way. Do not strain yourself. Short, held poses are enough.
+
+## Model 3: Audio (Audio Project)
+
+Record in a quiet room, with the microphone at the same distance as in the demo.
+
+**Background Noise (record first)**
+
+- At least 20 samples of 2 seconds each.
+- Record the quiet room, typing, a fan, people talking in the distance, and the sound of the venue if you can.
+- Do not make any pain sounds in this class.
+
+**calm**
+
+- Quiet, soft breathing.
+- Gentle cooing or humming, soft babbling.
+- Quiet, short sounds, with no distress.
+
+**mild**
+
+- Whimpering and fussing at low volume.
+- Short whines, sniffling, soft moaning.
+- Slightly rising pitch, but not loud.
+
+**severe**
+
+- Loud, sustained, high-pitched crying.
+- Wailing with rising and falling pitch.
+- Sharp cries with gasps between them.
+
+Tips:
+
+- Each audio sample is 1 second. Record many short clips instead of a few long ones.
+- Use the same teammate for a whole class if consistent, but also add clips from a second teammate so it does not learn one voice.
+- If you use any downloaded cry recording, make sure its license allows your use, and note the source.
+
+## After recording: quality checks
+
+- Each class in a model has a similar number of samples (within about 20 percent).
+- Each model includes at least two different people.
+- Delete bad samples: out of frame, wrong expression, blurry, or with background talking in the audio.
+- Click Train Model with the default settings.
+- Open Advanced, then Under the hood, and look at the accuracy per class and the confusion matrix. If two classes are confused (for example mild and severe), add more clear examples to both and retrain.
+- Test live with someone who was not in the training data.
+
+## Export and save
+
+- Export each model using the TensorFlow.js option and download it.
+- Save the files (model.json, metadata.json, weights.bin) in models/face, models/pose, and models/audio in the repo.
+- Keep a second copy of the model files on a USB drive or cloud folder.
+- Also keep the Teachable Machine project saved to Google Drive, so you can retrain quickly.
+
+## Time plan
+
+| Task | Time |
+| --- | --- |
+| Setup and read this script | 10 minutes |
+| Record face data | 20 to 30 minutes |
+| Record pose data | 20 to 30 minutes |
+| Record audio data | 20 to 30 minutes |
+| Train, test, and fix | 30 to 45 minutes |
+| Export and save | 10 minutes |
+
+If you are short on time, record face and pose first. The audio model is the first thing to cut.
