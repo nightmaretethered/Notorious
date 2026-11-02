@@ -390,7 +390,7 @@
       <div class="card-heading">
         <div>
           <h2 id="form-title">Current health observations</h2>
-          <p>Enter the values available to you and choose yes or no for the current observations.</p>
+          <p>Enter any measurements you have available. Every field is optional.</p>
         </div>
         <span class="child-badge"><span class="material-symbols-outlined">child_care</span><span id="child-name">Loading child profile…</span></span>
       </div>
@@ -399,9 +399,9 @@
         <div class="form-grid">
           <div class="question">
             <label class="question-title" for="temperature"><span class="material-symbols-outlined">device_thermostat</span>What is the body temperature?</label>
-            <p class="hint">Enter the temperature reading. Choose Celsius or Fahrenheit.</p>
+            <p class="hint">Optional. Choose Celsius or Fahrenheit.</p>
             <div class="field-row">
-              <input id="temperature" name="temperature" type="number" min="25" max="45" step="0.1" inputmode="decimal" placeholder="e.g. 37.0" required>
+              <input id="temperature" name="temperature" type="number" min="25" max="45" step="0.1" inputmode="decimal" placeholder="e.g. 37.0">
               <select aria-label="Temperature unit" class="unit-select" id="temperature-unit" name="temperatureUnit">
                 <option value="C">°C</option>
                 <option value="F">°F</option>
@@ -410,20 +410,32 @@
           </div>
 
           <div class="question">
+            <label class="question-title" for="nutrition-score"><span class="material-symbols-outlined">restaurant</span>Nutrition (optional)</label>
+            <p class="hint">Rate the baby’s nutrition from 1 to 10, where 10 is best.</p>
+            <input id="nutrition-score" name="nutritionScore" type="number" min="1" max="10" step="1" inputmode="numeric" placeholder="1–10">
+          </div>
+
+          <div class="question">
+            <label class="question-title" for="bowel-movement-count"><span class="material-symbols-outlined">child_friendly</span>Bowel movements (optional)</label>
+            <p class="hint">Enter a whole-number count.</p>
+            <input id="bowel-movement-count" name="bowelMovementCount" type="number" min="0" max="1000" step="1" inputmode="numeric" placeholder="Count">
+          </div>
+
+          <div class="question">
             <div class="question-title"><span class="material-symbols-outlined">restaurant</span>Has the baby been eating properly?</div>
-            <p class="hint">Select yes or no based on the baby’s eating today.</p>
+            <p class="hint">Optional. Select yes or no based on the baby’s eating today.</p>
             <div class="yes-no-options" role="radiogroup" aria-label="Has the baby been eating properly?">
-              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="true" required><span>Yes</span></label>
-              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="false" required><span>No</span></label>
+              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="true"><span>Yes</span></label>
+              <label class="yes-no-option"><input name="eatingProperly" type="radio" value="false"><span>No</span></label>
             </div>
           </div>
 
           <div class="question">
             <div class="question-title"><span class="material-symbols-outlined">child_friendly</span>Have bowel movements been normal?</div>
-            <p class="hint">Select yes or no based on the baby’s usual pattern.</p>
+            <p class="hint">Optional. Select yes or no based on the baby’s usual pattern.</p>
             <div class="yes-no-options" role="radiogroup" aria-label="Have bowel movements been normal?">
-              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="true" required><span>Yes</span></label>
-              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="false" required><span>No</span></label>
+              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="true"><span>Yes</span></label>
+              <label class="yes-no-option"><input name="bowelMovementNormal" type="radio" value="false"><span>No</span></label>
             </div>
           </div>
 
@@ -440,7 +452,7 @@
           </div>
         </div>
 
-        <div class="form-note"><span class="material-symbols-outlined">info</span><span>These are caregiver-entered observations for this prototype, not a medical assessment or diagnosis. Follow your clinician’s guidance for interpreting measurements.</span></div>
+        <div class="form-note"><span class="material-symbols-outlined">info</span><span>These optional caregiver-entered observations are saved as report context only. They do not affect the experimental facial estimate and are not a medical assessment or diagnosis. Follow your clinician’s guidance for interpreting measurements.</span></div>
         <p class="form-error" id="form-error" role="alert"></p>
         <div class="form-actions">
           <a class="back-link" href="/dashboard"><span class="material-symbols-outlined">arrow_back</span> Back to child profile</a>
@@ -469,12 +481,13 @@
       }
 
       temperatureUnit.addEventListener('change', () => {
-        if (temperatureInput.value === '') return;
-        const current = Number(temperatureInput.value);
-        const converted = temperatureUnit.value === 'F'
-          ? current * 9 / 5 + 32
-          : (current - 32) * 5 / 9;
-        temperatureInput.value = (Math.round(converted * 10) / 10).toFixed(1);
+        if (temperatureInput.value !== '') {
+          const current = Number(temperatureInput.value);
+          const converted = temperatureUnit.value === 'F'
+            ? current * 9 / 5 + 32
+            : (current - 32) * 5 / 9;
+          temperatureInput.value = (Math.round(converted * 10) / 10).toFixed(1);
+        }
         temperatureInput.min = temperatureUnit.value === 'F' ? '77' : '25';
         temperatureInput.max = temperatureUnit.value === 'F' ? '113' : '45';
       });
@@ -500,17 +513,17 @@
         if (!latestResponse.ok) throw new Error(latestResult.error || 'Could not load the latest assessment.');
         if (latestResult.assessment) {
           const previous = latestResult.assessment;
-          temperatureInput.value = previous.temperature;
-          temperatureUnit.value = previous.temperatureUnit;
-          temperatureInput.min = previous.temperatureUnit === 'F' ? '77' : '25';
-          temperatureInput.max = previous.temperatureUnit === 'F' ? '113' : '45';
+          temperatureInput.value = previous.temperature ?? '';
+          if (previous.temperatureUnit) temperatureUnit.value = previous.temperatureUnit;
+          temperatureInput.min = temperatureUnit.value === 'F' ? '77' : '25';
+          temperatureInput.max = temperatureUnit.value === 'F' ? '113' : '45';
+          document.getElementById('nutrition-score').value = previous.nutritionScore ?? '';
+          document.getElementById('bowel-movement-count').value = previous.bowelMovementCount ?? '';
           setRadioValue('eatingProperly', previous.eatingProperly);
           setRadioValue('bowelMovementNormal', previous.bowelMovementNormal);
           document.getElementById('blood-pressure-systolic').value = previous.bloodPressureSystolic ?? '';
           document.getElementById('blood-pressure-diastolic').value = previous.bloodPressureDiastolic ?? '';
-          statusElement.textContent = previous.eatingProperly === null || previous.bowelMovementNormal === null
-            ? 'Previous observations used an older scale. Please choose yes or no for both questions.'
-            : 'Most recent saved observations loaded. Save again to record a new set.';
+          statusElement.textContent = 'Most recent observations loaded. Save to record a new set, or leave every field blank.';
           const cameraLink = document.getElementById('camera-nav-link');
           cameraLink.href = `/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(previous.id)}`;
           cameraLink.setAttribute('aria-disabled', 'false');
@@ -532,17 +545,39 @@
           errorElement.textContent = 'Select a saved child profile before continuing.';
           return;
         }
-        if (!form.reportValidity()) return;
-
         const systolicValue = document.getElementById('blood-pressure-systolic').value;
         const diastolicValue = document.getElementById('blood-pressure-diastolic').value;
-        const eatingAnswer = form.querySelector('input[name="eatingProperly"]:checked');
-        const bowelAnswer = form.querySelector('input[name="bowelMovementNormal"]:checked');
+        const systolicInput = document.getElementById('blood-pressure-systolic');
+        const diastolicInput = document.getElementById('blood-pressure-diastolic');
+        systolicInput.setCustomValidity('');
+        diastolicInput.setCustomValidity('');
+        if (systolicValue !== '' && diastolicValue === '') {
+          diastolicInput.setCustomValidity('Enter both blood pressure values or leave both blank.');
+        } else if (systolicValue === '' && diastolicValue !== '') {
+          systolicInput.setCustomValidity('Enter both blood pressure values or leave both blank.');
+        } else if (systolicValue !== '' && Number(systolicValue) <= Number(diastolicValue)) {
+          systolicInput.setCustomValidity('Systolic pressure must be greater than diastolic pressure.');
+        }
+        if (!form.reportValidity()) return;
+
+        const temperatureValue = temperatureInput.value;
+        const nutritionValue = document.getElementById('nutrition-score').value;
+        const bowelMovementValue = document.getElementById('bowel-movement-count').value;
         const payload = {
-          temperature: Number(temperatureInput.value),
-          temperatureUnit: temperatureUnit.value,
-          eatingProperly: eatingAnswer?.value === 'true',
-          bowelMovementNormal: bowelAnswer?.value === 'true',
+          temperature: temperatureValue === '' ? null : Number(temperatureValue),
+          temperatureUnit: temperatureValue === '' ? null : temperatureUnit.value,
+          nutritionScore: nutritionValue === '' ? null : Number(nutritionValue),
+          bowelMovementCount: bowelMovementValue === '' ? null : Number(bowelMovementValue),
+          eatingProperly: form.querySelector('input[name="eatingProperly"]:checked')?.value === 'true'
+            ? true
+            : form.querySelector('input[name="eatingProperly"]:checked')?.value === 'false'
+              ? false
+              : null,
+          bowelMovementNormal: form.querySelector('input[name="bowelMovementNormal"]:checked')?.value === 'true'
+            ? true
+            : form.querySelector('input[name="bowelMovementNormal"]:checked')?.value === 'false'
+              ? false
+              : null,
           bloodPressureSystolic: systolicValue === '' ? null : Number(systolicValue),
           bloodPressureDiastolic: diastolicValue === '' ? null : Number(diastolicValue)
         };

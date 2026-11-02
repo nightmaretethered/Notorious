@@ -146,6 +146,25 @@
       outline: 3px solid #fff;
       outline-offset: 4px;
     }
+    .confirmation-card {
+      width: min(100%, 850px);
+      margin: 28px 0;
+      padding: clamp(20px, 4vw, 36px);
+      border: 1px solid rgb(255 255 255 / 75%);
+      border-radius: 24px;
+      background: rgb(255 255 255 / 95%);
+      box-shadow: 0 18px 48px rgb(25 54 130 / 15%);
+      color: #102454;
+    }
+    .confirmation-card h1 { margin: 0 0 8px; }
+    .confirmation-card > p { line-height: 1.6; }
+    .question-list { display: grid; gap: 14px; margin: 22px 0; }
+    .question-item { padding: 16px; border: 1px solid #dfe5ff; border-radius: 14px; background: #f8f9ff; }
+    .question-item legend { padding: 0 4px; font-weight: 700; }
+    .answer-options { display: flex; gap: 20px; margin-top: 10px; }
+    .answer-options label { display: inline-flex; align-items: center; gap: 8px; }
+    .confirm-button:disabled { opacity: .6; cursor: wait; transform: none; }
+    #confirmation-status { min-height: 1.5em; }
     @media (max-width: 1200px) {
       .topbar { flex-wrap: wrap; border-radius: 28px; }
       nav { order: 3; width: 100%; justify-content: center; overflow-x: auto; }
@@ -186,28 +205,158 @@
     </header>
   </div>
   <main>
-    <a class="confirm-button" data-page-link="report" href="/pain-scale-report">
-      <span>Confirm &amp; View Final Pain Scale Report</span>
-      <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-    </a>
+    <section class="confirmation-card">
+      <h1>Review the one-minute face assessment</h1>
+      <p id="confirmation-child">Loading selected child…</p>
+      <p>
+        Answer based on what you observed during the live camera assessment. These answers adjust the
+        experimental facial index slightly; they do not establish or diagnose pain. No video or images
+        are saved or uploaded.
+      </p>
+      <p id="capture-summary">Checking the captured facial samples…</p>
+      <form id="confirmation-form">
+        <div class="question-list">
+          <fieldset class="question-item">
+            <legend>Did you observe a frown, squeezed eyes, or grimace for much of the recording?</legend>
+            <div class="answer-options">
+              <label><input type="radio" name="distressObserved" value="yes" required> Yes</label>
+              <label><input type="radio" name="distressObserved" value="no" required> No</label>
+            </div>
+          </fieldset>
+          <fieldset class="question-item">
+            <legend>Did you observe calm or happy periods for much of the recording?</legend>
+            <div class="answer-options">
+              <label><input type="radio" name="calmPeriodsObserved" value="yes" required> Yes</label>
+              <label><input type="radio" name="calmPeriodsObserved" value="no" required> No</label>
+            </div>
+          </fieldset>
+          <fieldset class="question-item">
+            <legend>Was the child’s face clearly visible and lit for most of the recording?</legend>
+            <div class="answer-options">
+              <label><input type="radio" name="clearView" value="yes" required> Yes</label>
+              <label><input type="radio" name="clearView" value="no" required> No</label>
+            </div>
+          </fieldset>
+        </div>
+        <p>Distress confirmation adds 8 points; observed calm/happy periods subtract 8 points. Clear view affects capture quality only.</p>
+        <p id="confirmation-status" role="status" aria-live="polite"></p>
+        <button class="confirm-button" id="calculate-report" type="submit" disabled>
+          <span>Calculate and save report</span>
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        </button>
+      </form>
+    </section>
   </main>
+  <script src="/webcam-assets/pain-assessment.js"></script>
   <script>
-    const profileId = new URLSearchParams(location.search).get('profileId')
-      || sessionStorage.getItem('littlecare_profile_id');
-    if (profileId && /^[1-9]\d{0,17}$/.test(profileId)) {
-      sessionStorage.setItem('littlecare_profile_id', profileId);
-      for (const [page, route] of Object.entries({
-        dashboard: '/dashboard',
-        assessment: '/assessment-launch',
-        camera: '/camera-telemetry',
-        disambiguation: '/ai-disambiguation',
-        report: '/pain-scale-report'
-      })) {
+    const params = new URLSearchParams(location.search);
+    const profileId = params.get('profileId') || sessionStorage.getItem('littlecare_profile_id');
+    const assessmentId = params.get('assessmentId');
+    const captureKey = `littlecare_face_capture:${assessmentId}`;
+    const form = document.getElementById('confirmation-form');
+    const submitButton = document.getElementById('calculate-report');
+    const status = document.getElementById('confirmation-status');
+    let capture;
+
+    for (const [page, route] of Object.entries({
+      dashboard: '/dashboard',
+      assessment: '/assessment-launch',
+      camera: '/camera-telemetry',
+      disambiguation: '/ai-disambiguation',
+      report: '/pain-scale-report'
+    })) {
+      if (profileId && /^[1-9]\d{0,17}$/.test(profileId)) {
+        const query = `?profileId=${encodeURIComponent(profileId)}`;
+        const assessmentQuery = page === 'disambiguation' || page === 'report'
+          ? `&assessmentId=${encodeURIComponent(assessmentId || '')}`
+          : '';
         document.querySelectorAll(`[data-page-link="${page}"]`).forEach((link) => {
-          link.href = `${route}?profileId=${encodeURIComponent(profileId)}`;
+          link.href = `${route}${query}${assessmentQuery}`;
         });
       }
     }
+
+    async function prepareConfirmation() {
+      if (!profileId || !/^[1-9]\d{0,17}$/.test(profileId) ||
+          !assessmentId || !/^[1-9]\d{0,17}$/.test(assessmentId)) {
+        throw new Error('Start the assessment from the selected child profile first.');
+      }
+      const [assessmentResponse, profilesResponse] = await Promise.all([
+        fetch(`/api/child-profiles/${encodeURIComponent(profileId)}/assessments/${encodeURIComponent(assessmentId)}`),
+        fetch('/api/child-profiles')
+      ]);
+      const [result, profiles] = await Promise.all([
+        assessmentResponse.json(),
+        profilesResponse.json()
+      ]);
+      if (!assessmentResponse.ok) throw new Error(result.error || 'Could not verify the selected assessment.');
+      if (!profilesResponse.ok) throw new Error(profiles.error || 'Could not load child profile details.');
+      if (!result.assessment) throw new Error('The saved child assessment could not be found.');
+
+      const storedCapture = sessionStorage.getItem(captureKey);
+      if (!storedCapture) throw new Error('The one-minute facial samples are missing. Return to the camera assessment and try again.');
+      capture = JSON.parse(storedCapture);
+      if (!Array.isArray(capture.samples) || capture.samples.length < 10 ||
+          !Number.isInteger(capture.processedFrames) || capture.processedFrames < capture.samples.length) {
+        throw new Error('The facial samples are incomplete. Return to the camera assessment and try again.');
+      }
+
+      const selectedChild = profiles.profiles.find((profile) => profile.id === profileId);
+      if (!selectedChild) throw new Error('The selected child profile could not be found.');
+      document.getElementById('confirmation-child').textContent =
+        `Selected child: ${selectedChild.displayName}`;
+      document.getElementById('capture-summary').textContent =
+        `${capture.samples.length} face samples captured. Frames remained in this browser; no video was saved.`;
+      submitButton.disabled = false;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!capture || !form.reportValidity()) return;
+
+      const answers = Object.fromEntries(new FormData(form));
+      const caregiverAnswers = {
+        distressObserved: answers.distressObserved === 'yes',
+        calmPeriodsObserved: answers.calmPeriodsObserved === 'yes',
+        clearView: answers.clearView === 'yes'
+      };
+      submitButton.disabled = true;
+      status.textContent = 'Calculating the experimental facial index and saving the report…';
+      try {
+        const report = PainAssessment.calculateAssessment({
+          childId: profileId,
+          samples: capture.samples,
+          processedFrames: capture.processedFrames,
+          caregiverAnswers
+        });
+        if (report.confidence < 60) {
+          throw new Error('Capture quality is below 60%. Return to the camera assessment and retry with a clearer, better-lit face view.');
+        }
+        const response = await fetch(
+          `/api/child-profiles/${encodeURIComponent(profileId)}/assessments/${encodeURIComponent(assessmentId)}/pain-report`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(report)
+          }
+        );
+        const saved = await response.json();
+        if (!response.ok) throw new Error(saved.error || 'Could not save the pain report.');
+        sessionStorage.removeItem(captureKey);
+        location.assign(
+          `/pain-scale-report?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`
+        );
+      } catch (error) {
+        status.textContent = error.message || 'The report could not be calculated or saved.';
+        console.error('Pain assessment confirmation failed:', error);
+        submitButton.disabled = false;
+      }
+    });
+
+    prepareConfirmation().catch((error) => {
+      status.textContent = error.message || 'Could not prepare the confirmation step.';
+      console.error('Parent confirmation could not be prepared:', error);
+    });
   </script>
 </body>
 </html>

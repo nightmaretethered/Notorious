@@ -10,6 +10,19 @@ import pg from 'pg';
 const { Pool } = pg;
 const scrypt = promisify(scryptCallback);
 const projectDirectory = dirname(fileURLToPath(import.meta.url));
+const webcamAssetFiles = new Map([
+  ['/webcam-assets/face-api.js', ['face-api.js', 'text/javascript; charset=utf-8']],
+  ['/webcam-assets/pain-assessment.js', ['pain-assessment.js', 'text/javascript; charset=utf-8']],
+  ['/webcam-assets/models/tiny_face_detector_model-weights_manifest.json', ['models/tiny_face_detector_model-weights_manifest.json', 'application/json; charset=utf-8']],
+  ['/webcam-assets/models/tiny_face_detector_model-shard1', ['models/tiny_face_detector_model-shard1', 'application/octet-stream']],
+  ['/webcam-assets/models/face_expression_model-weights_manifest.json', ['models/face_expression_model-weights_manifest.json', 'application/json; charset=utf-8']],
+  ['/webcam-assets/models/face_expression_model-shard1', ['models/face_expression_model-shard1', 'application/octet-stream']],
+  ['/webcam-assets/models/face_landmark_68_model-weights_manifest.json', ['models/face_landmark_68_model-weights_manifest.json', 'application/json; charset=utf-8']],
+  ['/webcam-assets/models/face_landmark_68_model-shard1', ['models/face_landmark_68_model-shard1', 'application/octet-stream']]
+]);
+const websiteAssetFiles = new Map([
+  ['/facial-assessment/app.js', ['facial_assessment/app.js', 'text/javascript; charset=utf-8']]
+]);
 const sessionLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const sessionCookieName = 'littlecare_session';
 const oauthStateCookieName = 'littlecare_google_oauth';
@@ -57,6 +70,37 @@ function sendJson(response, status, payload, headers = {}) {
     ...headers
   });
   response.end(JSON.stringify(payload));
+}
+
+async function sendWebcamAsset(response, pathname, method) {
+  const asset = webcamAssetFiles.get(pathname);
+  if (!asset) return false;
+
+  const filePath = join(projectDirectory, '..', 'Webcam Face Expression Recognition', asset[0]);
+  const content = await readFile(filePath);
+  response.writeHead(200, {
+    'Content-Type': asset[1],
+    'Content-Length': content.length,
+    'Cache-Control': 'public, max-age=3600',
+    'X-Content-Type-Options': 'nosniff'
+  });
+  response.end(method === 'HEAD' ? undefined : content);
+  return true;
+}
+
+async function sendWebsiteAsset(response, pathname, method) {
+  const asset = websiteAssetFiles.get(pathname);
+  if (!asset) return false;
+
+  const content = await readFile(join(projectDirectory, asset[0]));
+  response.writeHead(200, {
+    'Content-Type': asset[1],
+    'Content-Length': content.length,
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff'
+  });
+  response.end(method === 'HEAD' ? undefined : content);
+  return true;
 }
 
 function sendCookie(response, token) {
@@ -281,24 +325,36 @@ function validateAssessmentAnswers(body) {
   }
 
   const {
-    temperature, temperatureUnit, eatingProperly, bowelMovementNormal,
+    temperature, temperatureUnit, nutritionScore, bowelMovementCount,
+    eatingProperly, bowelMovementNormal,
     bloodPressureSystolic, bloodPressureDiastolic
   } = body;
-  if (
+  const hasTemperature = temperature !== null && temperature !== undefined;
+  if (hasTemperature && (
     typeof temperature !== 'number'
     || !Number.isFinite(temperature)
     || !['C', 'F'].includes(temperatureUnit)
     || temperature < (temperatureUnit === 'C' ? 25 : 77)
     || temperature > (temperatureUnit === 'C' ? 45 : 113)
-  ) {
+  )) {
     throw new HttpError(400, 'Enter a valid temperature between 25–45 °C or 77–113 °F.');
   }
-
-  if (typeof eatingProperly !== 'boolean') {
-    throw new HttpError(400, 'Choose yes or no for whether the baby has been eating properly.');
+  if (!hasTemperature && temperatureUnit !== null && temperatureUnit !== undefined) {
+    throw new HttpError(400, 'Choose a temperature only when entering a reading.');
   }
-  if (typeof bowelMovementNormal !== 'boolean') {
-    throw new HttpError(400, 'Choose yes or no for whether bowel movements have been normal.');
+  if (nutritionScore !== null && nutritionScore !== undefined &&
+      (!Number.isInteger(nutritionScore) || nutritionScore < 1 || nutritionScore > 10)) {
+    throw new HttpError(400, 'Nutrition must be a whole number from 1 to 10.');
+  }
+  if (bowelMovementCount !== null && bowelMovementCount !== undefined &&
+      (!Number.isInteger(bowelMovementCount) || bowelMovementCount < 0 || bowelMovementCount > 1000)) {
+    throw new HttpError(400, 'Bowel movements must be a whole number from 0 to 1000.');
+  }
+  if (
+    (eatingProperly !== null && eatingProperly !== undefined && typeof eatingProperly !== 'boolean')
+    || (bowelMovementNormal !== null && bowelMovementNormal !== undefined && typeof bowelMovementNormal !== 'boolean')
+  ) {
+    throw new HttpError(400, 'Choose valid yes or no observations.');
   }
 
   const hasSystolic = bloodPressureSystolic !== null && bloodPressureSystolic !== undefined;
@@ -319,26 +375,101 @@ function validateAssessmentAnswers(body) {
   }
 
   return {
-    temperature,
-    temperatureUnit,
-    eatingProperly,
-    bowelMovementNormal,
+    temperature: hasTemperature ? temperature : null,
+    temperatureUnit: hasTemperature ? temperatureUnit : null,
+    nutritionScore: nutritionScore ?? null,
+    bowelMovementCount: bowelMovementCount ?? null,
+    eatingProperly: eatingProperly ?? null,
+    bowelMovementNormal: bowelMovementNormal ?? null,
     bloodPressureSystolic: hasSystolic ? bloodPressureSystolic : null,
     bloodPressureDiastolic: hasDiastolic ? bloodPressureDiastolic : null
   };
+}
+
+function validatePainReport(body, profileId) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw new HttpError(400, 'The pain assessment report must be an object.');
+  }
+  if (body.childId !== profileId) {
+    throw new HttpError(400, 'The report child ID does not match the selected profile.');
+  }
+  if (!['calm', 'mild', 'moderate-severe'].includes(body.painLevel)) {
+    throw new HttpError(400, 'The pain level is invalid.');
+  }
+  if (typeof body.painScore !== 'number' || !Number.isFinite(body.painScore) ||
+      body.painScore < 0 || body.painScore > 100) {
+    throw new HttpError(400, 'The pain score must be a number from 0 to 100.');
+  }
+  const expectedLevel = body.painScore < 50
+    ? 'calm'
+    : body.painScore <= 75
+      ? 'mild'
+      : 'moderate-severe';
+  if (body.painLevel !== expectedLevel) {
+    throw new HttpError(400, 'The pain level does not match the score band.');
+  }
+  if (!Number.isInteger(body.confidence) || body.confidence < 60 || body.confidence > 100) {
+    throw new HttpError(400, 'Face-detection capture quality must be a whole number from 60 to 100.');
+  }
+  if (!Array.isArray(body.reasons) || body.reasons.length > 20 ||
+      body.reasons.some((reason) => typeof reason !== 'string' || reason.length > 300)) {
+    throw new HttpError(400, 'Report reasons must be at most 20 short strings.');
+  }
+  if (typeof body.guidance !== 'string' || body.guidance.length > 1000) {
+    throw new HttpError(400, 'Report guidance must be a string of at most 1000 characters.');
+  }
+  return body;
+}
+
+function getAssessmentContext(row) {
+  const context = {};
+  if (row.temperature !== null && row.temperature !== undefined) {
+    const temperature = Number(row.temperature);
+    context.temperatureC = row.temperature_unit === 'F'
+      ? Math.round(((temperature - 32) * 5 / 9) * 10) / 10
+      : temperature;
+  }
+  if (row.nutrition_score !== null && row.nutrition_score !== undefined) {
+    context.nutritionScore = Number(row.nutrition_score);
+  }
+  if (row.blood_pressure_systolic !== null && row.blood_pressure_systolic !== undefined) {
+    context.bloodPressureSystolic = Number(row.blood_pressure_systolic);
+    context.bloodPressureDiastolic = Number(row.blood_pressure_diastolic);
+  }
+  if (row.bowel_movement_count !== null && row.bowel_movement_count !== undefined) {
+    context.bowelMovementCount = Number(row.bowel_movement_count);
+  }
+  return context;
 }
 
 function serializeAssessment(row) {
   return {
     id: String(row.id),
     profileId: String(row.child_profile_id),
-    temperature: Number(row.temperature),
+    childId: String(row.child_profile_id),
+    temperature: row.temperature === null || row.temperature === undefined ? null : Number(row.temperature),
     temperatureUnit: row.temperature_unit,
-    eatingProperly: row.eating_properly,
-    bowelMovementNormal: row.bowel_movement_normal,
+    eatingProperly: row.eating_properly ?? null,
+    bowelMovementNormal: row.bowel_movement_normal ?? null,
+    nutritionScore: row.nutrition_score === null || row.nutrition_score === undefined
+      ? null
+      : Number(row.nutrition_score),
+    bowelMovementCount: row.bowel_movement_count === null || row.bowel_movement_count === undefined
+      ? null
+      : Number(row.bowel_movement_count),
     bloodPressureSystolic: row.blood_pressure_systolic,
     bloodPressureDiastolic: row.blood_pressure_diastolic,
-    createdAt: row.created_at
+    painLevel: row.pain_level ?? null,
+    painScore: row.pain_score === null || row.pain_score === undefined ? null : Number(row.pain_score),
+    confidence: row.pain_confidence === null || row.pain_confidence === undefined
+      ? null
+      : Number(row.pain_confidence),
+    reasons: row.pain_reasons || [],
+    guidance: row.pain_guidance ?? null,
+    context: row.pain_context && Object.keys(row.pain_context).length > 0
+      ? row.pain_context
+      : getAssessmentContext(row),
+    createdAt: row.pain_report_created_at || row.created_at
   };
 }
 
@@ -351,10 +482,13 @@ async function getLatestAssessment(request, response, profileId) {
 
   const result = await pool.query(
     `SELECT a.id, a.child_profile_id, a.temperature, a.temperature_unit,
-            a.eating_properly, a.bowel_movement_normal, a.blood_pressure_systolic,
-            a.blood_pressure_diastolic, a.created_at
+            a.eating_properly, a.bowel_movement_normal,
+            a.nutrition_score, a.bowel_movement_count, a.blood_pressure_systolic,
+            a.blood_pressure_diastolic, a.pain_level, a.pain_score, a.pain_confidence,
+            a.pain_reasons, a.pain_guidance, a.pain_context, a.pain_report_created_at,
+            a.created_at
      FROM child_assessments a
-     JOIN child_profiles p ON p.id = a.child_profile_id
+     JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
      WHERE a.user_id = $1 AND a.child_profile_id = $2
      ORDER BY a.created_at DESC, a.id DESC
      LIMIT 1`,
@@ -371,6 +505,30 @@ async function getLatestAssessment(request, response, profileId) {
   sendJson(response, 200, { assessment: result.rows[0] ? serializeAssessment(result.rows[0]) : null });
 }
 
+async function getAssessmentById(request, response, profileId, assessmentId) {
+  const user = await getSessionUser(request);
+  if (!user) throw new HttpError(401, 'Please sign in to view assessment answers.');
+  if (!/^[1-9]\d{0,17}$/.test(profileId) || !/^[1-9]\d{0,17}$/.test(assessmentId)) {
+    throw new HttpError(400, 'That child assessment could not be found.');
+  }
+
+  const result = await pool.query(
+    `SELECT a.id, a.child_profile_id, a.temperature, a.temperature_unit,
+            a.eating_properly, a.bowel_movement_normal,
+            a.nutrition_score, a.bowel_movement_count, a.blood_pressure_systolic,
+            a.blood_pressure_diastolic, a.pain_level, a.pain_score, a.pain_confidence,
+            a.pain_reasons, a.pain_guidance, a.pain_context, a.pain_report_created_at,
+            a.created_at
+     FROM child_assessments a
+     JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
+     WHERE a.user_id = $1 AND a.child_profile_id = $2 AND a.id = $3
+     LIMIT 1`,
+    [user.id, profileId, assessmentId]
+  );
+  if (result.rowCount === 0) throw new HttpError(404, 'That child assessment could not be found.');
+  sendJson(response, 200, { assessment: serializeAssessment(result.rows[0]) });
+}
+
 async function saveAssessment(request, response, profileId) {
   const user = await getSessionUser(request);
   if (!user) throw new HttpError(401, 'Please sign in before saving assessment answers.');
@@ -381,24 +539,72 @@ async function saveAssessment(request, response, profileId) {
   const answers = validateAssessmentAnswers(await readJsonBody(request));
   const result = await pool.query(
     `INSERT INTO child_assessments (
-       user_id, child_profile_id, temperature, temperature_unit, eating_properly,
-       bowel_movement_normal, eating_score, bowel_movement_score,
-       blood_pressure_systolic, blood_pressure_diastolic
+       user_id, child_profile_id, temperature, temperature_unit, nutrition_score,
+       bowel_movement_count, eating_properly, bowel_movement_normal, eating_score,
+       bowel_movement_score, blood_pressure_systolic, blood_pressure_diastolic
      )
-     SELECT $1, p.id, $3, $4, $5, $6, NULL, NULL, $7, $8
+     SELECT $1, p.id, $3, $4, $5, $6, $7, $8, NULL, NULL, $9, $10
      FROM child_profiles p
      WHERE p.id = $2 AND p.user_id = $1
-     RETURNING id, child_profile_id, temperature, temperature_unit, eating_properly,
-               bowel_movement_normal, blood_pressure_systolic,
-               blood_pressure_diastolic, created_at`,
+     RETURNING id, child_profile_id, temperature, temperature_unit, nutrition_score,
+               bowel_movement_count, eating_properly, bowel_movement_normal,
+               blood_pressure_systolic, blood_pressure_diastolic,
+               pain_level, pain_score, pain_confidence, pain_reasons, pain_guidance,
+               pain_context, pain_report_created_at, created_at`,
     [
       user.id, profileId, answers.temperature, answers.temperatureUnit,
+      answers.nutritionScore, answers.bowelMovementCount,
       answers.eatingProperly, answers.bowelMovementNormal,
       answers.bloodPressureSystolic, answers.bloodPressureDiastolic
     ]
   );
   if (result.rowCount !== 1) throw new HttpError(404, 'That child profile could not be found.');
   sendJson(response, 201, { assessment: serializeAssessment(result.rows[0]) });
+}
+
+async function savePainReport(request, response, profileId, assessmentId) {
+  const user = await getSessionUser(request);
+  if (!user) throw new HttpError(401, 'Please sign in before saving a pain report.');
+  if (!/^[1-9]\d{0,17}$/.test(profileId) || !/^[1-9]\d{0,17}$/.test(assessmentId)) {
+    throw new HttpError(400, 'The selected assessment could not be found.');
+  }
+
+  const report = validatePainReport(await readJsonBody(request), profileId);
+  const result = await pool.query(
+    `UPDATE child_assessments a
+     SET pain_level = $4,
+         pain_score = $5,
+         pain_confidence = $6,
+         pain_reasons = $7::jsonb,
+         pain_guidance = $8,
+         pain_context = jsonb_strip_nulls(jsonb_build_object(
+           'temperatureC', CASE
+             WHEN a.temperature IS NULL THEN NULL
+             WHEN a.temperature_unit = 'F' THEN round((a.temperature - 32) * 5 / 9, 1)
+             ELSE a.temperature
+           END,
+           'nutritionScore', a.nutrition_score,
+           'bloodPressureSystolic', a.blood_pressure_systolic,
+           'bloodPressureDiastolic', a.blood_pressure_diastolic,
+           'bowelMovementCount', a.bowel_movement_count
+         )),
+         pain_report_created_at = now()
+     FROM child_profiles p
+     WHERE a.id = $1 AND a.child_profile_id = p.id AND a.user_id = $3
+       AND p.id = $2 AND p.user_id = $3
+     RETURNING a.id, a.child_profile_id, a.temperature, a.temperature_unit,
+               a.eating_properly, a.bowel_movement_normal,
+               a.nutrition_score, a.bowel_movement_count, a.blood_pressure_systolic,
+               a.blood_pressure_diastolic, a.pain_level, a.pain_score, a.pain_confidence,
+               a.pain_reasons, a.pain_guidance, a.pain_context, a.pain_report_created_at,
+               a.created_at`,
+    [
+      assessmentId, profileId, user.id, report.painLevel, report.painScore,
+      report.confidence, JSON.stringify(report.reasons), report.guidance
+    ]
+  );
+  if (result.rowCount !== 1) throw new HttpError(404, 'That child assessment could not be found.');
+  sendJson(response, 200, { assessment: serializeAssessment(result.rows[0]) });
 }
 
 function serializeChildProfile(row) {
@@ -758,6 +964,12 @@ async function sendHtmlFile(response, path) {
 async function handleRequest(request, response) {
   const url = new URL(request.url, 'http://localhost');
 
+  if ((request.method === 'GET' || request.method === 'HEAD') &&
+      (await sendWebcamAsset(response, url.pathname, request.method) ||
+       await sendWebsiteAsset(response, url.pathname, request.method))) {
+    return;
+  }
+
   if (
     request.method === 'GET'
     && (url.pathname === '/' || url.pathname === '/login' || url.pathname === '/hospital-login')
@@ -849,7 +1061,7 @@ async function handleRequest(request, response) {
       return;
     }
 
-    await sendHtmlFile(response, 'live_video_camera_telemetry/code.html');
+    await sendHtmlFile(response, 'facial_assessment/code.html');
     return;
   }
 
@@ -886,6 +1098,32 @@ async function handleRequest(request, response) {
   const childProfileMatch = url.pathname.match(/^\/api\/child-profiles\/([^/]+)$/);
   if (request.method === 'PUT' && childProfileMatch) {
     await updateChildProfile(request, response, childProfileMatch[1]);
+    return;
+  }
+
+  const childPainReportMatch = url.pathname.match(
+    /^\/api\/child-profiles\/([^/]+)\/assessments\/([^/]+)\/pain-report$/
+  );
+  if (request.method === 'POST' && childPainReportMatch) {
+    await savePainReport(
+      request,
+      response,
+      childPainReportMatch[1],
+      childPainReportMatch[2]
+    );
+    return;
+  }
+
+  const childAssessmentRecordMatch = url.pathname.match(
+    /^\/api\/child-profiles\/([^/]+)\/assessments\/([1-9]\d{0,17})$/
+  );
+  if (request.method === 'GET' && childAssessmentRecordMatch) {
+    await getAssessmentById(
+      request,
+      response,
+      childAssessmentRecordMatch[1],
+      childAssessmentRecordMatch[2]
+    );
     return;
   }
 
@@ -954,14 +1192,23 @@ async function startServer() {
       id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
       user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       child_profile_id BIGINT NOT NULL REFERENCES child_profiles(id) ON DELETE CASCADE,
-      temperature NUMERIC(5, 2) NOT NULL CHECK (temperature > 0),
-      temperature_unit TEXT NOT NULL CHECK (temperature_unit IN ('C', 'F')),
+      temperature NUMERIC(5, 2) CHECK (temperature > 0),
+      temperature_unit TEXT CHECK (temperature_unit IN ('C', 'F')),
       eating_score SMALLINT CHECK (eating_score BETWEEN 1 AND 10),
       bowel_movement_score SMALLINT CHECK (bowel_movement_score BETWEEN 1 AND 10),
       eating_properly BOOLEAN,
       bowel_movement_normal BOOLEAN,
+      nutrition_score SMALLINT CHECK (nutrition_score BETWEEN 1 AND 10),
+      bowel_movement_count INTEGER CHECK (bowel_movement_count BETWEEN 0 AND 1000),
       blood_pressure_systolic SMALLINT CHECK (blood_pressure_systolic BETWEEN 1 AND 500),
       blood_pressure_diastolic SMALLINT CHECK (blood_pressure_diastolic BETWEEN 1 AND 300),
+      pain_level TEXT CHECK (pain_level IN ('calm', 'mild', 'moderate-severe')),
+      pain_score NUMERIC(5, 1) CHECK (pain_score BETWEEN 0 AND 100),
+      pain_confidence SMALLINT CHECK (pain_confidence BETWEEN 0 AND 100),
+      pain_reasons JSONB NOT NULL DEFAULT '[]'::jsonb,
+      pain_guidance TEXT,
+      pain_context JSONB NOT NULL DEFAULT '{}'::jsonb,
+      pain_report_created_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       CHECK (
         (blood_pressure_systolic IS NULL AND blood_pressure_diastolic IS NULL)
@@ -972,10 +1219,26 @@ async function startServer() {
         )
       )
     );
+    ALTER TABLE child_assessments ALTER COLUMN temperature DROP NOT NULL;
+    ALTER TABLE child_assessments ALTER COLUMN temperature_unit DROP NOT NULL;
     ALTER TABLE child_assessments ALTER COLUMN eating_score DROP NOT NULL;
     ALTER TABLE child_assessments ALTER COLUMN bowel_movement_score DROP NOT NULL;
     ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS eating_properly BOOLEAN;
     ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS bowel_movement_normal BOOLEAN;
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS nutrition_score SMALLINT
+      CHECK (nutrition_score BETWEEN 1 AND 10);
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS bowel_movement_count INTEGER
+      CHECK (bowel_movement_count BETWEEN 0 AND 1000);
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_level TEXT
+      CHECK (pain_level IN ('calm', 'mild', 'moderate-severe'));
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_score NUMERIC(5, 1)
+      CHECK (pain_score BETWEEN 0 AND 100);
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_confidence SMALLINT
+      CHECK (pain_confidence BETWEEN 0 AND 100);
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_reasons JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_guidance TEXT;
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_context JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ALTER TABLE child_assessments ADD COLUMN IF NOT EXISTS pain_report_created_at TIMESTAMPTZ;
     CREATE INDEX IF NOT EXISTS child_assessments_profile_created_idx
       ON child_assessments(child_profile_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS child_assessments_user_id_idx ON child_assessments(user_id);

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Experimental Facial Expression Assessment</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 16px/1.5 system-ui, sans-serif;
+      color: #17212b;
+      background: #f3f6f8;
+    }
+
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 { margin: 0 0 8px; }
+    h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    p { margin: 8px 0; }
+
+    .panel {
+      margin: 20px 0;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #d6e0e7;
+      border-radius: 12px;
+    }
+
+    .notice {
+      padding: 12px 16px;
+      background: #fff4db;
+      border-left: 4px solid #a56300;
+      border-radius: 6px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    label { display: grid; gap: 5px; }
+
+    input, select, button {
+      font: inherit;
+      padding: 8px 10px;
+    }
+
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #9aabb7;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: #174ea6;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.55; cursor: wait; }
+    button.secondary { background: #53636e; }
+
+    .camera {
+      position: relative;
+      width: min(100%, 640px);
+      margin: 20px auto;
+      background: #101820;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    video, canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    #status { min-height: 1.5em; }
+    #reportJson { overflow-x: auto; padding: 12px; background: #f3f6f8; }
+    #reportSummary { font-size: 1.15rem; font-weight: 650; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 520px) {
+      body { padding: 16px; }
+      .panel { padding: 16px; }
+    }
+  </style>
+  <script defer src="/face-api.js"></script>
+  <script defer src="/pain-assessment.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <h1>Experimental Facial Expression Assessment</h1>
+  <p>This prototype uses facial-expression estimates and 68 facial landmarks only. It does not record audio or body movement.</p>
+  <p class="notice" role="note">
+    Research/demo use only. The model and score are not clinically validated for child pain and cannot measure pain accurately.
+    Test only with consenting adults acting out expressions; use a synthetic child ID. Do not use this result to diagnose, treat,
+    or delay care. Ask a qualified clinician about health concerns.
+  </p>
+
+  <form id="assessmentForm">
+    <section class="panel">
+      <h2>Assessment details</h2>
+      <div class="field-grid">
+        <label for="childId">Child ID (use a synthetic demo ID)
+          <input id="childId" name="childId" maxlength="100" required autocomplete="off">
+        </label>
+        <label for="temperature">Body temperature (°C, optional)
+          <input id="temperature" name="temperature" type="number" min="20" max="45" step="0.1">
+        </label>
+        <label for="nutrition">Nutrition (1–10, optional)
+          <input id="nutrition" name="nutrition" type="number" min="1" max="10" step="1">
+        </label>
+        <label for="systolic">Blood pressure systolic (mmHg, optional)
+          <input id="systolic" name="systolic" type="number" min="30" max="300" step="1">
+        </label>
+        <label for="diastolic">Blood pressure diastolic (mmHg, optional)
+          <input id="diastolic" name="diastolic" type="number" min="20" max="200" step="1">
+        </label>
+        <label for="bowelMovements">Bowel movements (count, optional)
+          <input id="bowelMovements" name="bowelMovements" type="number" min="0" max="1000" step="1">
+        </label>
+      </div>
+      <p>Optional health values are recorded as context only; they do not change the visual score or provide medical interpretation.</p>
+    </section>
+
+    <section class="panel">
+      <h2>One-minute capture</h2>
+      <p>Keep the consenting adult’s face in view with steady, front-facing light. The camera runs only after you start.</p>
+      <div class="controls">
+        <label for="inputSize">Detector size
+          <select id="inputSize">
+            <option value="128" selected>128 (fast)</option>
+            <option value="160">160</option>
+            <option value="224">224</option>
+          </select>
+        </label>
+        <button id="startButton" type="submit" disabled>Loading models…</button>
+        <button id="cancelButton" class="secondary" type="button" hidden>Stop without report</button>
+        <span>Time remaining: <strong id="timeRemaining">01:00</strong></span>
+      </div>
+      <div class="camera">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <p id="status" role="status" aria-live="polite">Loading face detection, expression, and landmark models…</p>
+    </section>
+  </form>
+
+  <section id="report" class="panel" hidden aria-live="polite">
+    <h2>Data report</h2>
+    <p id="saveStatus"></p>
+    <p id="reportSummary"></p>
+    <p id="reportQuality"></p>
+    <ul id="reasons"></ul>
+    <pre id="reportJson"></pre>
+    <button id="retrySaveButton" type="button" hidden>Retry saving report</button>
+  </section>
+</body>
+</html>
