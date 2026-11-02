@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OAuth2Client } from 'google-auth-library';
+import QRCode from 'qrcode';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -26,6 +27,7 @@ const websiteAssetFiles = new Map([
 const sessionLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const sessionCookieName = 'littlecare_session';
 const oauthStateCookieName = 'littlecare_google_oauth';
+const sharedReportsHospitalId = '1234';
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/google/callback';
 const passwordKeyLength = 64;
 const rateLimitWindowMs = 15 * 60 * 1000;
@@ -151,6 +153,15 @@ function isGoogleOAuthConfigured() {
 function redirectToLogin(response, error) {
   response.writeHead(303, {
     Location: `/login?authError=${encodeURIComponent(error)}`,
+    'Cache-Control': 'no-store'
+  });
+  response.end();
+}
+
+function redirectToHospitalLogin(response, error, returnTo) {
+  const query = new URLSearchParams({ authError: error, returnTo });
+  response.writeHead(303, {
+    Location: `/hospital-login?${query}`,
     'Cache-Control': 'no-store'
   });
   response.end();
@@ -473,7 +484,7 @@ function serializeAssessment(row) {
   };
 }
 
-async function getLatestAssessment(request, response, profileId) {
+async function getLatestAssessment(request, response, profileId, completedOnly = false) {
   const user = await getSessionUser(request);
   if (!user) throw new HttpError(401, 'Please sign in to view assessment answers.');
   if (!/^[1-9]\d{0,17}$/.test(profileId)) {
@@ -490,9 +501,10 @@ async function getLatestAssessment(request, response, profileId) {
      FROM child_assessments a
      JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
      WHERE a.user_id = $1 AND a.child_profile_id = $2
+       AND ($3::boolean = false OR a.pain_level IS NOT NULL)
      ORDER BY a.created_at DESC, a.id DESC
      LIMIT 1`,
-    [user.id, profileId]
+    [user.id, profileId, completedOnly]
   );
   if (result.rowCount === 0) {
     const profile = await pool.query(
@@ -710,7 +722,7 @@ async function getSessionUser(request) {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
 
   const result = await pool.query(
-    `SELECT users.id, users.email
+    `SELECT users.id, users.email, users.hospital_id AS "hospitalId"
      FROM auth_sessions
      JOIN users ON users.id = auth_sessions.user_id
      WHERE auth_sessions.token_hash = $1 AND auth_sessions.expires_at > now()`,
@@ -718,6 +730,77 @@ async function getSessionUser(request) {
   );
 
   return result.rows[0] ?? null;
+}
+
+async function requireSharedReportsHospital(request) {
+  const user = await getSessionUser(request);
+  if (!user) throw new HttpError(401, 'Please sign in with the Karnataka Hospital ID 1234.');
+  if (user.hospitalId !== sharedReportsHospitalId) {
+    throw new HttpError(403, 'These reports are only available to accounts registered with Karnataka Hospital ID 1234.');
+  }
+  return user;
+}
+
+async function getHospitalReports(request, response) {
+  await requireSharedReportsHospital(request);
+  const result = await pool.query(
+    `SELECT p.id AS profile_id, a.id AS assessment_id, p.display_name,
+            p.age_years, caregiver.email AS caregiver_email, a.pain_level,
+            a.pain_score, a.pain_confidence,
+            COALESCE(a.pain_report_created_at, a.created_at) AS report_created_at
+     FROM child_assessments a
+     JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
+     JOIN users caregiver ON caregiver.id = p.user_id
+     WHERE caregiver.hospital_id IS NULL AND a.pain_level IS NOT NULL
+     ORDER BY COALESCE(a.pain_report_created_at, a.created_at) DESC, a.id DESC`
+  );
+  sendJson(response, 200, {
+    reports: result.rows.map((row) => ({
+      profileId: String(row.profile_id),
+      assessmentId: String(row.assessment_id),
+      childName: row.display_name,
+      ageYears: row.age_years === null ? null : Number(row.age_years),
+      caregiverEmail: row.caregiver_email,
+      painLevel: row.pain_level,
+      painScore: row.pain_score === null ? null : Number(row.pain_score),
+      confidence: row.pain_confidence === null ? null : Number(row.pain_confidence),
+      createdAt: row.report_created_at
+    }))
+  });
+}
+
+async function getHospitalReport(request, response, profileId, assessmentId) {
+  await requireSharedReportsHospital(request);
+  if (!/^[1-9]\d{0,17}$/.test(profileId) || !/^[1-9]\d{0,17}$/.test(assessmentId)) {
+    throw new HttpError(400, 'The selected child report could not be found.');
+  }
+
+  const result = await pool.query(
+    `SELECT a.id, a.child_profile_id, a.temperature, a.temperature_unit,
+            a.eating_properly, a.bowel_movement_normal, a.nutrition_score,
+            a.bowel_movement_count, a.blood_pressure_systolic,
+            a.blood_pressure_diastolic, a.pain_level, a.pain_score,
+            a.pain_confidence, a.pain_reasons, a.pain_guidance, a.pain_context,
+            a.pain_report_created_at, a.created_at, p.display_name, p.age_years,
+            caregiver.email AS caregiver_email
+     FROM child_assessments a
+     JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
+     JOIN users caregiver ON caregiver.id = p.user_id
+     WHERE caregiver.hospital_id IS NULL AND p.id = $1 AND a.id = $2
+       AND a.pain_level IS NOT NULL
+     LIMIT 1`,
+    [profileId, assessmentId]
+  );
+  if (result.rowCount !== 1) throw new HttpError(404, 'That completed caregiver report could not be found.');
+  const row = result.rows[0];
+  sendJson(response, 200, {
+    profile: {
+      displayName: row.display_name,
+      ageYears: row.age_years === null ? null : Number(row.age_years)
+    },
+    caregiverEmail: row.caregiver_email,
+    assessment: serializeAssessment(row)
+  });
 }
 
 async function register(request, response) {
@@ -1021,6 +1104,57 @@ async function handleRequest(request, response) {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/hospital-reports') {
+    const user = await getSessionUser(request);
+    if (!user) {
+      redirectToHospitalLogin(response, 'Sign in with Karnataka Hospital ID 1234 to view caregiver reports.', '/hospital-reports');
+      return;
+    }
+    if (user.hospitalId !== sharedReportsHospitalId) {
+      redirectToHospitalLogin(
+        response,
+        'These reports are only available to accounts registered with Karnataka Hospital ID 1234.',
+        '/hospital-reports'
+      );
+      return;
+    }
+    await sendHtmlFile(response, 'hospital_reports/code.html');
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/hospital-report') {
+    const user = await getSessionUser(request);
+    if (!user) {
+      redirectToHospitalLogin(
+        response,
+        'Sign in with Karnataka Hospital ID 1234 to view caregiver reports.',
+        `${url.pathname}${url.search}`
+      );
+      return;
+    }
+    if (user.hospitalId !== sharedReportsHospitalId) {
+      redirectToHospitalLogin(
+        response,
+        'These reports are only available to accounts registered with Karnataka Hospital ID 1234.',
+        `${url.pathname}${url.search}`
+      );
+      return;
+    }
+    await sendHtmlFile(response, 'pediatric_pain_scale_final_report/code.html');
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/hospital-qr-generator') {
+    if (!await getSessionUser(request)) {
+      response.writeHead(303, { Location: '/hospital-login', 'Cache-Control': 'no-store' });
+      response.end();
+      return;
+    }
+
+    await sendHtmlFile(response, 'hospital_qr_generator/code.html');
+    return;
+  }
+
   if (request.method === 'GET' && url.pathname === '/assessment-launch') {
     if (!await getSessionUser(request)) {
       response.writeHead(303, { Location: '/login', 'Cache-Control': 'no-store' });
@@ -1045,7 +1179,10 @@ async function handleRequest(request, response) {
 
   if (request.method === 'GET' && url.pathname === '/pain-scale-report') {
     if (!await getSessionUser(request)) {
-      response.writeHead(303, { Location: '/login', 'Cache-Control': 'no-store' });
+      response.writeHead(303, {
+        Location: `/login?returnTo=${encodeURIComponent(`${url.pathname}${url.search}`)}`,
+        'Cache-Control': 'no-store'
+      });
       response.end();
       return;
     }
@@ -1090,8 +1227,79 @@ async function handleRequest(request, response) {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/hospital-reports') {
+    await getHospitalReports(request, response);
+    return;
+  }
+
+  const hospitalReportMatch = url.pathname.match(/^\/api\/hospital-reports\/([^/]+)\/([^/]+)$/);
+  if (request.method === 'GET' && hospitalReportMatch) {
+    await getHospitalReport(request, response, hospitalReportMatch[1], hospitalReportMatch[2]);
+    return;
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/child-profiles') {
     await createChildProfile(request, response);
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/qr-code') {
+    const user = await getSessionUser(request);
+    if (!user) {
+      throw new HttpError(401, 'Please sign in before generating a QR code.');
+    }
+
+    const body = await readJsonBody(request);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new HttpError(400, 'QR details must be a JSON object.');
+    }
+    const originHeader = request.headers.origin;
+    const reportUrlValue = typeof body.reportUrl === 'string' ? body.reportUrl : '';
+    let reportUrl;
+    let requestOrigin;
+    try {
+      reportUrl = new URL(reportUrlValue);
+      requestOrigin = new URL(originHeader || '');
+    } catch {
+      throw new HttpError(400, 'A valid report link is required for the QR code.');
+    }
+
+    const profileId = reportUrl.searchParams.get('profileId') || '';
+    const assessmentId = reportUrl.searchParams.get('assessmentId') || '';
+    if (
+      !['http:', 'https:'].includes(reportUrl.protocol)
+      || reportUrl.origin !== requestOrigin.origin
+      || reportUrl.pathname !== '/pain-scale-report'
+      || reportUrl.username
+      || reportUrl.password
+      || reportUrl.hash
+      || reportUrl.searchParams.size !== 2
+      || reportUrl.searchParams.getAll('profileId').length !== 1
+      || reportUrl.searchParams.getAll('assessmentId').length !== 1
+      || !/^[1-9]\d{0,17}$/.test(profileId)
+      || !/^[1-9]\d{0,17}$/.test(assessmentId)
+    ) {
+      throw new HttpError(400, 'The QR code must link to a report in this application.');
+    }
+
+    const reportResult = await pool.query(
+      `SELECT 1
+       FROM child_assessments a
+       JOIN child_profiles p ON p.id = a.child_profile_id AND p.user_id = a.user_id
+       WHERE p.user_id = $1 AND p.id = $2 AND a.id = $3 AND a.pain_level IS NOT NULL`,
+      [user.id, profileId, assessmentId]
+    );
+    if (reportResult.rowCount !== 1) {
+      throw new HttpError(404, 'That completed child report could not be found.');
+    }
+
+    const payloadUrl = reportUrl.toString();
+    const dataUrl = await QRCode.toDataURL(payloadUrl, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 320
+    });
+    sendJson(response, 200, { dataUrl, payloadUrl });
     return;
   }
 
@@ -1127,12 +1335,21 @@ async function handleRequest(request, response) {
     return;
   }
 
-  const childAssessmentMatch = url.pathname.match(/^\/api\/child-profiles\/([^/]+)\/assessments(?:\/latest)?$/);
+  const childAssessmentMatch = url.pathname.match(/^\/api\/child-profiles\/([^/]+)\/assessments(?:\/latest(?:-report)?)?$/);
+  if (request.method === 'GET' && childAssessmentMatch && url.pathname.endsWith('/latest-report')) {
+    await getLatestAssessment(request, response, childAssessmentMatch[1], true);
+    return;
+  }
   if (request.method === 'GET' && childAssessmentMatch && url.pathname.endsWith('/latest')) {
     await getLatestAssessment(request, response, childAssessmentMatch[1]);
     return;
   }
-  if (request.method === 'POST' && childAssessmentMatch && !url.pathname.endsWith('/latest')) {
+  if (
+    request.method === 'POST'
+    && childAssessmentMatch
+    && !url.pathname.endsWith('/latest')
+    && !url.pathname.endsWith('/latest-report')
+  ) {
     await saveAssessment(request, response, childAssessmentMatch[1]);
     return;
   }
@@ -1143,7 +1360,9 @@ async function handleRequest(request, response) {
       sendJson(response, 401, { error: 'Please sign in to continue.' });
       return;
     }
-    sendJson(response, 200, { user: { id: user.id, email: user.email } });
+    sendJson(response, 200, {
+      user: { id: user.id, email: user.email, hospitalId: user.hospitalId }
+    });
     return;
   }
 
@@ -1262,6 +1481,16 @@ async function startServer() {
   });
 
   const port = Number(process.env.PORT ?? 3000);
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Stop the existing process or start the app on a different port via PORT=<number>.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    throw error;
+  });
+
   server.listen(port, () => {
     console.log(`LittleCare is running at http://localhost:${port}`);
   });

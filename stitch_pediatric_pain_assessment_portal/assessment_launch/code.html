@@ -241,8 +241,25 @@
     }
     .field-row input:focus, .field-row select:focus { border-color: #3159f1; box-shadow: 0 0 0 3px rgb(49 89 241 / 13%); }
     .unit-select { max-width: 105px; }
-    .bp-field { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); align-items: center; gap: 10px; }
-    .bp-separator { color: #77819c; text-align: center; font-weight: 800; }
+    .bp-field { display: grid; grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr); align-items: end; gap: 10px; }
+    .bp-reading { min-width: 0; }
+    .bp-reading label { display: block; margin-bottom: 7px; color: #34446c; font-size: 12px; font-weight: 700; }
+    .bp-reading input {
+      width: 100%;
+      min-width: 0;
+      height: 46px;
+      padding: 0 13px;
+      border: 1px solid #d7ddf4;
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+      color: #112653;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .bp-reading input:focus { border-color: #3159f1; box-shadow: 0 0 0 3px rgb(49 89 241 / 13%); }
+    .bp-separator { padding-bottom: 12px; color: #77819c; text-align: center; font-weight: 800; }
+    .bp-preview { min-height: 18px; margin: 10px 0 0; color: #4b5c82; font-size: 12px; font-weight: 700; }
     .yes-no-options {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -441,14 +458,19 @@
 
           <div class="question">
             <div class="question-title"><span class="material-symbols-outlined">favorite</span>Blood pressure <span style="font-size:11px;color:#71809e;font-weight:600">(optional)</span></div>
-            <p class="hint">Enter systolic and diastolic values in mmHg, if known.</p>
+            <p class="hint" id="blood-pressure-hint">Enter both readings in mmHg, if known. Systolic (top) should be greater than diastolic (bottom).</p>
             <div class="bp-field">
-              <label class="sr-only" for="blood-pressure-systolic">Systolic blood pressure</label>
-              <input id="blood-pressure-systolic" name="bloodPressureSystolic" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Systolic">
-              <span class="bp-separator">/</span>
-              <label class="sr-only" for="blood-pressure-diastolic">Diastolic blood pressure</label>
-              <input id="blood-pressure-diastolic" name="bloodPressureDiastolic" type="number" min="1" max="300" step="1" inputmode="numeric" placeholder="Diastolic">
+              <div class="bp-reading">
+                <label for="blood-pressure-systolic">Systolic (top)</label>
+                <input id="blood-pressure-systolic" name="bloodPressureSystolic" type="number" min="1" max="500" step="1" inputmode="numeric" aria-describedby="blood-pressure-hint blood-pressure-preview">
+              </div>
+              <span class="bp-separator" aria-hidden="true">/</span>
+              <div class="bp-reading">
+                <label for="blood-pressure-diastolic">Diastolic (bottom)</label>
+                <input id="blood-pressure-diastolic" name="bloodPressureDiastolic" type="number" min="1" max="300" step="1" inputmode="numeric" aria-describedby="blood-pressure-hint blood-pressure-preview">
+              </div>
             </div>
+            <p class="bp-preview" id="blood-pressure-preview" role="status" aria-live="polite">Enter both readings to preview them as systolic/diastolic.</p>
           </div>
         </div>
 
@@ -472,7 +494,21 @@
       const statusElement = document.getElementById('load-status');
       const temperatureInput = document.getElementById('temperature');
       const temperatureUnit = document.getElementById('temperature-unit');
+      const systolicInput = document.getElementById('blood-pressure-systolic');
+      const diastolicInput = document.getElementById('blood-pressure-diastolic');
+      const bloodPressurePreview = document.getElementById('blood-pressure-preview');
       let profileReady = false;
+
+      function updateBloodPressurePreview() {
+        const systolic = systolicInput.value;
+        const diastolic = diastolicInput.value;
+        bloodPressurePreview.textContent = systolic && diastolic
+          ? `Blood pressure: ${systolic}/${diastolic} mmHg`
+          : 'Enter both readings to preview them as systolic/diastolic.';
+      }
+
+      systolicInput.addEventListener('input', updateBloodPressurePreview);
+      diastolicInput.addEventListener('input', updateBloodPressurePreview);
 
       function setRadioValue(name, value) {
         if (typeof value !== 'boolean') return;
@@ -500,36 +536,51 @@
       }
 
       try {
-        const profilesResponse = await fetch('/api/child-profiles');
+        const profilesResponse = await fetch('/api/child-profiles', {
+          signal: AbortSignal.timeout(10000)
+        });
         const profilesResult = await profilesResponse.json();
         if (!profilesResponse.ok) throw new Error(profilesResult.error || 'Could not load child profiles.');
         const profile = profilesResult.profiles.find((item) => item.id === profileId);
         if (!profile) throw new Error('That child profile was not found. Return to the dashboard and select a profile.');
         document.getElementById('child-name').textContent = profile.displayName;
         profileReady = true;
+        statusElement.textContent = 'Child profile loaded. Previous observations are optional.';
 
-        const latestResponse = await fetch(`/api/child-profiles/${encodeURIComponent(profileId)}/assessments/latest`);
-        const latestResult = await latestResponse.json();
-        if (!latestResponse.ok) throw new Error(latestResult.error || 'Could not load the latest assessment.');
-        if (latestResult.assessment) {
-          const previous = latestResult.assessment;
-          temperatureInput.value = previous.temperature ?? '';
-          if (previous.temperatureUnit) temperatureUnit.value = previous.temperatureUnit;
-          temperatureInput.min = temperatureUnit.value === 'F' ? '77' : '25';
-          temperatureInput.max = temperatureUnit.value === 'F' ? '113' : '45';
-          document.getElementById('nutrition-score').value = previous.nutritionScore ?? '';
-          document.getElementById('bowel-movement-count').value = previous.bowelMovementCount ?? '';
-          setRadioValue('eatingProperly', previous.eatingProperly);
-          setRadioValue('bowelMovementNormal', previous.bowelMovementNormal);
-          document.getElementById('blood-pressure-systolic').value = previous.bloodPressureSystolic ?? '';
-          document.getElementById('blood-pressure-diastolic').value = previous.bloodPressureDiastolic ?? '';
-          statusElement.textContent = 'Most recent observations loaded. Save to record a new set, or leave every field blank.';
-          const cameraLink = document.getElementById('camera-nav-link');
-          cameraLink.href = `/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(previous.id)}`;
-          cameraLink.setAttribute('aria-disabled', 'false');
+        try {
+          const latestResponse = await fetch(
+            `/api/child-profiles/${encodeURIComponent(profileId)}/assessments/latest`,
+            { signal: AbortSignal.timeout(10000) }
+          );
+          const latestResult = await latestResponse.json();
+          if (!latestResponse.ok) throw new Error(latestResult.error || 'Could not load the latest assessment.');
+          if (latestResult.assessment) {
+            const previous = latestResult.assessment;
+            temperatureInput.value = previous.temperature ?? '';
+            if (previous.temperatureUnit) temperatureUnit.value = previous.temperatureUnit;
+            temperatureInput.min = temperatureUnit.value === 'F' ? '77' : '25';
+            temperatureInput.max = temperatureUnit.value === 'F' ? '113' : '45';
+            document.getElementById('nutrition-score').value = previous.nutritionScore ?? '';
+            document.getElementById('bowel-movement-count').value = previous.bowelMovementCount ?? '';
+            setRadioValue('eatingProperly', previous.eatingProperly);
+            setRadioValue('bowelMovementNormal', previous.bowelMovementNormal);
+            systolicInput.value = previous.bloodPressureSystolic ?? '';
+            diastolicInput.value = previous.bloodPressureDiastolic ?? '';
+            updateBloodPressurePreview();
+            statusElement.textContent = 'Most recent observations loaded. Save to record a new set, or leave every field blank.';
+            const cameraLink = document.getElementById('camera-nav-link');
+            cameraLink.href = `/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(previous.id)}`;
+            cameraLink.setAttribute('aria-disabled', 'false');
+          }
+        } catch (error) {
+          statusElement.textContent =
+            'The child profile is ready. Previous observations could not be loaded; you can still continue with a new assessment.';
+          console.error('Previous assessment observations could not be loaded:', error);
         }
       } catch (error) {
-        statusElement.textContent = error.message || 'Could not load this child profile.';
+        statusElement.textContent = error.name === 'TimeoutError'
+          ? 'Loading the child profile timed out. Check your connection and return to the dashboard to try again.'
+          : error.message || 'Could not load this child profile.';
         profileReady = false;
         console.error('Assessment launch could not be initialized:', error);
       }
@@ -547,8 +598,6 @@
         }
         const systolicValue = document.getElementById('blood-pressure-systolic').value;
         const diastolicValue = document.getElementById('blood-pressure-diastolic').value;
-        const systolicInput = document.getElementById('blood-pressure-systolic');
-        const diastolicInput = document.getElementById('blood-pressure-diastolic');
         systolicInput.setCustomValidity('');
         diastolicInput.setCustomValidity('');
         if (systolicValue !== '' && diastolicValue === '') {
@@ -587,13 +636,16 @@
           const response = await fetch(`/api/child-profiles/${encodeURIComponent(profileId)}/assessments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(15000)
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Could not save these observations.');
           location.assign(`/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(result.assessment.id)}`);
         } catch (error) {
-          errorElement.textContent = error.message || 'Could not save these observations. Please try again.';
+          errorElement.textContent = error.name === 'TimeoutError'
+            ? 'Saving timed out. Check your connection before trying again.'
+            : error.message || 'Could not save these observations. Please try again.';
           console.error('Assessment observations could not be saved:', error);
           submitButton.disabled = false;
           submitButton.querySelector('span:first-child').textContent = 'Save and continue to camera';

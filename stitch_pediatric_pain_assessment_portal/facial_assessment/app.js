@@ -4,6 +4,7 @@ const assessmentId = params.get('assessmentId')
 const video = document.getElementById('video')
 const canvas = document.getElementById('overlay')
 const startButton = document.getElementById('start-button')
+const startButtonLabel = document.getElementById('start-button-label')
 const cancelButton = document.getElementById('cancel-button')
 const status = document.getElementById('status')
 const timeRemaining = document.getElementById('time-remaining')
@@ -11,13 +12,22 @@ const durationMs = 60_000
 const sampleIntervalMs = 200
 const captureStorageKey = `littlecare_face_capture:${assessmentId}`
 let modelsReady = false
-let starting = false
-let running = false
+let activeRun = null
 
-function stopCamera() {
-  const stream = video.srcObject
-  if (stream) stream.getTracks().forEach((track) => track.stop())
-  video.srcObject = null
+function setStartButtonText(text) {
+  if (startButtonLabel) startButtonLabel.textContent = text
+  else startButton.textContent = text
+}
+
+function stopCamera(run = activeRun) {
+  const stream = run?.stream || video.srcObject
+  if (stream && (!run || !run.streamStopped)) {
+    if (run) run.streamStopped = true
+    stream.getTracks().forEach((track) => {
+      if (track.readyState !== 'ended') track.stop()
+    })
+  }
+  if (!run || video.srcObject === stream) video.srcObject = null
   const context = canvas.getContext('2d')
   context.clearRect(0, 0, canvas.width, canvas.height)
 }
@@ -102,14 +112,27 @@ async function loadModelsAndAssessment() {
   ])
   modelsReady = true
   startButton.disabled = false
-  startButton.textContent = 'Start one-minute assessment'
+  setStartButtonText('Start one-minute assessment')
   status.textContent = 'Models ready. Start when the child’s face is visible in the camera.'
 }
 
 async function startAssessment() {
-  if (!modelsReady || starting) return
-  starting = true
-  running = true
+  if (!modelsReady || activeRun) return
+  let resolveCancellation
+  const run = {
+    cancelled: false,
+    stream: null,
+    streamStopped: false,
+    cancellation: new Promise((resolve) => {
+      resolveCancellation = resolve
+    })
+  }
+  run.cancel = () => {
+    if (run.cancelled) return
+    run.cancelled = true
+    resolveCancellation()
+  }
+  activeRun = run
   startButton.disabled = true
   cancelButton.hidden = false
   status.textContent = 'Requesting camera access. The one-minute assessment starts when the camera is ready.'
@@ -118,33 +141,48 @@ async function startAssessment() {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error('This browser does not support camera access.')
     }
-    const stream = await navigator.mediaDevices.getUserMedia({
+    const cameraRequest = navigator.mediaDevices.getUserMedia({
       audio: false,
       video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
     })
-    if (!running) {
-      stream.getTracks().forEach((track) => track.stop())
+    const stream = await Promise.race([
+      cameraRequest,
+      run.cancellation.then(() => null)
+    ])
+    if (!stream) {
+      cameraRequest.then((lateStream) => {
+        lateStream.getTracks().forEach((track) => track.stop())
+      }).catch((error) => {
+        if (!run.cancelled) console.error('Camera access failed after cancellation:', error)
+      })
       return
     }
 
+    run.stream = stream
     video.srcObject = stream
-    await video.play()
+    await Promise.race([video.play(), run.cancellation])
+    if (run.cancelled) return
     const samples = []
     let processedFrames = 0
     const startedAt = performance.now()
     status.textContent = 'Assessment in progress. This experimental result is not a medical assessment.'
 
-    while (running && performance.now() - startedAt < durationMs) {
+    while (!run.cancelled && performance.now() - startedAt < durationMs) {
       const loopStartedAt = performance.now()
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         processedFrames += 1
-        const result = await faceapi
+        const detection = faceapi
           .detectSingleFace(
             video,
             new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 })
           )
           .withFaceLandmarks()
           .withFaceExpressions()
+        const result = await Promise.race([
+          detection,
+          run.cancellation.then(() => null)
+        ])
+        if (run.cancelled) break
         if (result) {
           samples.push({
             expressions: result.expressions,
@@ -163,18 +201,17 @@ async function startAssessment() {
       status.textContent = samples.length
         ? `Assessment in progress: ${samples.length} face samples captured.`
         : 'Assessment in progress: looking for a face in the camera.'
-      await new Promise((resolve) => setTimeout(
-        resolve,
-        Math.max(0, sampleIntervalMs - (performance.now() - loopStartedAt))
-      ))
+      await Promise.race([
+        new Promise((resolve) => setTimeout(
+          resolve,
+          Math.max(0, sampleIntervalMs - (performance.now() - loopStartedAt))
+        )),
+        run.cancellation
+      ])
     }
 
-    stopCamera()
-    cancelButton.hidden = true
-    if (!running) {
-      status.textContent = 'Assessment cancelled. No report was created.'
-      return
-    }
+    stopCamera(run)
+    if (run.cancelled) return
 
     timeRemaining.textContent = '00:00'
     if (samples.length < 10) {
@@ -190,26 +227,39 @@ async function startAssessment() {
       `/ai-disambiguation?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`
     )
   } catch (error) {
-    stopCamera()
-    status.textContent = `Assessment could not be completed: ${error.message}`
-    console.error('Facial assessment failed:', error)
+    if (!run.cancelled) {
+      status.textContent = `Assessment could not be completed: ${error.message}`
+      console.error('Facial assessment failed:', error)
+    }
   } finally {
-    running = false
-    starting = false
-    cancelButton.hidden = true
-    startButton.disabled = !modelsReady
-    startButton.textContent = 'Start another one-minute assessment'
+    stopCamera(run)
+    if (activeRun === run) {
+      activeRun = null
+      cancelButton.hidden = true
+      startButton.disabled = !modelsReady
+      setStartButtonText('Start one-minute assessment')
+      if (run.cancelled) {
+        timeRemaining.textContent = '01:00'
+        status.textContent = 'Assessment stopped. No report was created. You can start again when ready.'
+      }
+    }
   }
 }
 
 cancelButton.addEventListener('click', () => {
-  running = false
-  stopCamera()
-  status.textContent = 'Stopping assessment without creating a report…'
+  if (!activeRun) return
+  activeRun.cancel()
+  stopCamera(activeRun)
+  sessionStorage.removeItem(captureStorageKey)
+  cancelButton.hidden = true
+  status.textContent = 'Assessment stopped. No report was created. You can start again when ready.'
 })
 
 startButton.addEventListener('click', startAssessment)
-window.addEventListener('beforeunload', stopCamera)
+window.addEventListener('beforeunload', () => {
+  if (activeRun) activeRun.cancel()
+  stopCamera()
+})
 loadModelsAndAssessment().catch((error) => {
   status.textContent = `Unable to prepare assessment: ${error.message}`
   console.error('Facial assessment setup failed:', error)

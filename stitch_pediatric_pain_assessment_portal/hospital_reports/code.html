@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1745ef">
+  <title>Caregiver Reports | LittleCare AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: #102454;
+      background: #eaf0ff;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / 28%) 1px, transparent 1.5px) 0 0 / 24px 24px,
+        linear-gradient(160deg, #1645f5 0%, #6791ff 42%, #eef3ff 100%);
+    }
+    button, a { font: inherit; }
+    .topbar-wrap { position: sticky; top: 0; z-index: 2; padding: 14px clamp(16px, 3vw, 40px) 0; }
+    .topbar {
+      width: min(100%, 1440px);
+      min-height: 72px;
+      margin: 0 auto;
+      padding: 12px clamp(16px, 2.4vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border: 1px solid rgb(255 255 255 / 34%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 16%);
+      box-shadow: 0 14px 36px rgb(8 35 133 / 16%);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; color: #fff; text-decoration: none; }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b90069;
+    }
+    .brand-mark .material-symbols-outlined { font-size: 23px; }
+    .brand-name { font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .brand-subtitle { margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    .logout-button {
+      min-height: 42px;
+      padding: 8px 17px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid rgb(255 255 255 / 45%);
+      border-radius: 999px;
+      color: #fff;
+      background: rgb(255 255 255 / 12%);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    main { width: min(100%, 1480px); margin: 0 auto; padding: 38px clamp(16px, 3vw, 40px); }
+    h1 { margin: 0; color: #fff; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.04em; }
+    .intro { margin: 10px 0 22px; color: #f2f5ff; line-height: 1.6; }
+    .notice {
+      margin: 0 0 20px;
+      padding: 14px 17px;
+      border: 1px solid #f3d48b;
+      border-radius: 14px;
+      color: #624200;
+      background: #fff7db;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .report-card {
+      padding: clamp(18px, 3vw, 30px);
+      border: 1px solid rgb(255 255 255 / 75%);
+      border-radius: 24px;
+      background: rgb(255 255 255 / 95%);
+      box-shadow: 0 18px 48px rgb(25 54 130 / 15%);
+    }
+    .card-heading {
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h2 { margin: 0; font-size: 21px; }
+    #report-count { color: #64708a; font-size: 13px; font-weight: 700; }
+    #report-status { min-height: 22px; margin: 0 0 10px; color: #475675; font-size: 14px; }
+    .table-scroll { overflow-x: auto; border: 1px solid #e0e6f4; border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 13px 15px; border-bottom: 1px solid #e8ecf5; vertical-align: middle; }
+    th { color: #4f5f80; background: #f3f6ff; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    td { color: #243454; font-size: 13px; line-height: 1.5; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .patient-name { color: #102454; font-weight: 800; }
+    .muted { color: #687694; }
+    .report-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #1745ef;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .report-link:hover { text-decoration: underline; }
+    .empty-cell { padding: 26px; color: #64708a; text-align: center; }
+    .error { color: #a51d27 !important; }
+    @media (max-width: 680px) {
+      .topbar-wrap { padding: 8px 10px 0; }
+      .topbar { min-height: 62px; padding: 10px 13px; border-radius: 24px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 15px; }
+      .brand-subtitle { font-size: 8px; }
+      .logout-button { padding: 8px 11px; font-size: 12px; }
+      main { padding-top: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar-wrap">
+    <header class="topbar">
+      <a class="brand" href="/hospital-reports">
+        <span class="brand-mark"><span class="material-symbols-outlined" aria-hidden="true">vital_signs</span></span>
+        <span><span class="brand-name">LittleCare AI</span><br><span class="brand-subtitle">KARNATAKA HOSPITAL PORTAL</span></span>
+      </a>
+      <button class="logout-button" id="logout-button" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">logout</span> Sign out
+      </button>
+    </header>
+  </div>
+  <main>
+    <h1>Caregiver Reports</h1>
+    <p class="intro">Completed child assessment reports submitted by individual and caregiver accounts.</p>
+    <p class="notice"><strong>Local prototype:</strong> every account registered with Karnataka Hospital ID 1234 can view all caregiver reports listed here. This is not a verified hospital authorization system. Do not use real patient information.</p>
+    <section class="report-card" aria-labelledby="report-list-title">
+      <div class="card-heading">
+        <h2 id="report-list-title">All completed reports</h2>
+        <span id="report-count"></span>
+      </div>
+      <p id="report-status" role="status" aria-live="polite">Loading caregiver reports…</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">S.No.</th>
+              <th scope="col">Patient</th>
+              <th scope="col">Patient information</th>
+              <th scope="col">Submitted by caregiver</th>
+              <th scope="col">Report date</th>
+              <th scope="col">Pain level</th>
+              <th scope="col">Score</th>
+              <th scope="col">Report</th>
+            </tr>
+          </thead>
+          <tbody id="report-rows">
+            <tr><td class="empty-cell" colspan="8">Loading reports…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    const reportRows = document.getElementById('report-rows');
+    const reportStatus = document.getElementById('report-status');
+
+    function addCell(row, value, className = '') {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      cell.textContent = value;
+      row.append(cell);
+      return cell;
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString();
+    }
+
+    async function loadReports() {
+      try {
+        const response = await fetch('/api/hospital-reports', {
+          signal: AbortSignal.timeout(15000)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not load caregiver reports.');
+
+        reportRows.replaceChildren();
+        document.getElementById('report-count').textContent =
+          `${result.reports.length} ${result.reports.length === 1 ? 'report' : 'reports'}`;
+        if (result.reports.length === 0) {
+          const row = document.createElement('tr');
+          const cell = addCell(row, 'No completed caregiver reports are available yet.', 'empty-cell');
+          cell.colSpan = 8;
+          reportRows.append(row);
+          reportStatus.textContent = '';
+          return;
+        }
+
+        result.reports.forEach((report, index) => {
+          const row = document.createElement('tr');
+          addCell(row, String(index + 1));
+          addCell(row, report.childName, 'patient-name');
+          addCell(row, Number.isFinite(report.ageYears) ? `${report.ageYears} years` : 'Age not provided', 'muted');
+          addCell(row, report.caregiverEmail);
+          addCell(row, formatDate(report.createdAt));
+          addCell(row, report.painLevel.replace('-', ' '));
+          addCell(row, Number.isFinite(report.painScore) ? `${report.painScore} / 100` : '—');
+          const linkCell = document.createElement('td');
+          const link = document.createElement('a');
+          link.className = 'report-link';
+          link.href = `/hospital-report?${new URLSearchParams({
+            profileId: report.profileId,
+            assessmentId: report.assessmentId
+          })}`;
+          link.textContent = 'View report';
+          linkCell.append(link);
+          row.append(linkCell);
+          reportRows.append(row);
+        });
+        reportStatus.textContent = '';
+      } catch (error) {
+        reportRows.replaceChildren();
+        const row = document.createElement('tr');
+        const cell = addCell(
+          row,
+          error.name === 'TimeoutError'
+            ? 'Loading reports timed out. Refresh to try again.'
+            : error.message || 'Could not load caregiver reports.',
+          'empty-cell'
+        );
+        cell.colSpan = 8;
+        reportRows.append(row);
+        reportStatus.textContent = 'The report list could not be loaded.';
+        reportStatus.classList.add('error');
+        console.error('Hospital caregiver reports could not be loaded:', error);
+      }
+    }
+
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      const button = document.getElementById('logout-button');
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/auth/logout', { method: 'POST' });
+        if (!response.ok) throw new Error('Could not sign out. Please try again.');
+        location.assign('/hospital-login');
+      } catch (error) {
+        button.disabled = false;
+        reportStatus.textContent = error.message || 'Could not sign out.';
+        reportStatus.classList.add('error');
+      }
+    });
+
+    loadReports();
+  </script>
+</body>
+</html>

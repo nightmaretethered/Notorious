@@ -3,58 +3,269 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Facial Pain Assessment | LittleCare</title>
+  <meta name="theme-color" content="#1745ef">
+  <title>Facial Pain Assessment | LittleCare AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <style>
     :root {
-      color: #17212b;
-      background: #f3f6f8;
-      font: 16px/1.5 system-ui, sans-serif;
+      color-scheme: light;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: #102454;
+      background: #eaf0ff;
+      font-synthesis: none;
     }
-    body { max-width: 900px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0 0 8px; }
-    p { margin: 8px 0; }
-    .panel { margin: 20px 0; padding: 20px; background: #fff; border: 1px solid #d6e0e7; border-radius: 12px; }
-    .notice { padding: 12px 16px; background: #fff4db; border-left: 4px solid #a56300; border-radius: 6px; }
-    .camera { position: relative; width: min(100%, 640px); margin: 20px auto; overflow: hidden; background: #101820; border-radius: 12px; }
-    video, canvas { display: block; width: 100%; height: auto; }
-    canvas { position: absolute; inset: 0; }
-    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0; }
-    button { padding: 9px 14px; border: 0; border-radius: 6px; color: #fff; background: #174ea6; font: inherit; cursor: pointer; }
-    button.secondary { background: #53636e; }
-    button:disabled { opacity: .55; cursor: wait; }
-    #status { min-height: 1.5em; }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 0;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / 28%) 1px, transparent 1.5px) 0 0 / 24px 24px,
+        linear-gradient(160deg, #1645f5 0%, #6791ff 42%, #eef3ff 100%);
+    }
+    button { font: inherit; }
+    a { color: inherit; }
     [hidden] { display: none !important; }
-    @media (max-width: 520px) { body { padding: 16px; } .panel { padding: 16px; } }
+    .topbar-wrap { position: sticky; top: 0; z-index: 5; padding: 14px clamp(16px, 3vw, 40px) 0; }
+    .topbar {
+      width: min(100%, 1440px);
+      min-height: 76px;
+      margin: 0 auto;
+      padding: 12px clamp(16px, 2.4vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border: 1px solid rgb(255 255 255 / 34%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 16%);
+      box-shadow: 0 14px 36px rgb(8 35 133 / 16%);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; color: #fff; text-decoration: none; flex: 0 0 auto; }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b90069;
+      box-shadow: 0 5px 16px rgb(179 0 98 / 28%);
+    }
+    .brand-mark .material-symbols-outlined { font-size: 23px; }
+    .brand-name { font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .brand-subtitle { margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    nav { display: flex; align-items: center; gap: 4px; padding: 5px; border: 1px solid rgb(255 255 255 / 20%); border-radius: 999px; background: rgb(255 255 255 / 10%); }
+    nav a {
+      padding: 10px 15px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    nav a[aria-current="page"] { color: #1239c8; background: #fff; }
+    .settings-link, .account-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; color: #fff; }
+    .settings-link {
+      gap: 6px;
+      padding: 9px 14px;
+      border: 1px solid rgb(255 255 255 / 35%);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .account-icon { width: 38px; height: 38px; border: 2px solid rgb(255 255 255 / 55%); border-radius: 50%; background: #173ac9; }
+    main { width: min(100%, 1200px); margin: 0 auto; padding: 38px clamp(16px, 3vw, 40px) 56px; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .eyebrow .material-symbols-outlined { font-size: 20px; }
+    h1 { margin: 12px 0 8px; color: #fff; font-size: clamp(30px, 4vw, 46px); line-height: 1.12; letter-spacing: -.04em; text-shadow: 0 3px 14px rgb(12 40 127 / 18%); }
+    .intro { max-width: 760px; margin: 0; color: #e9efff; font-size: 16px; line-height: 1.65; }
+    .stepper { display: flex; align-items: center; gap: 10px; margin: 25px 0 20px; color: #fff; font-size: 12px; font-weight: 700; }
+    .step { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid rgb(255 255 255 / 30%); border-radius: 999px; background: rgb(255 255 255 / 10%); }
+    .step.active { color: #1739bf; background: #fff; }
+    .step-number { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: rgb(255 255 255 / 22%); }
+    .step.active .step-number { color: #fff; background: #1745ef; }
+    .step-line { width: clamp(16px, 4vw, 48px); height: 1px; background: rgb(255 255 255 / 44%); }
+    .load-status { min-height: 18px; margin: 11px 0 0; color: #fff; font-size: 12px; }
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, .8fr); gap: 18px; align-items: start; }
+    .assessment-card {
+      min-width: 0;
+      padding: clamp(20px, 3vw, 32px);
+      border: 1px solid rgb(255 255 255 / 72%);
+      border-radius: 28px;
+      background: rgb(255 255 255 / 92%);
+      box-shadow: 0 20px 55px rgb(25 54 130 / 15%);
+    }
+    .card-heading { padding-bottom: 18px; border-bottom: 1px solid #e6eaff; }
+    .card-heading h2 { margin: 0; color: #112653; font-size: 21px; letter-spacing: -.02em; }
+    .card-heading p { margin: 7px 0 0; color: #63708e; font-size: 13px; line-height: 1.6; }
+    .child-badge { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin-top: 14px; padding: 9px 13px; border-radius: 999px; background: #eef1ff; color: #1638bd; font-size: 12px; font-weight: 800; }
+    #child-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notice { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 0; padding: 13px 15px; border: 1px solid #ffd9e3; border-radius: 14px; background: #fff4f7; color: #71314b; font-size: 12px; line-height: 1.6; }
+    .notice .material-symbols-outlined { color: #b30062; font-size: 19px; flex: 0 0 auto; }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0 16px; }
+    button {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 19px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(100deg, #ff2e93, #df0872);
+      box-shadow: 0 8px 22px rgb(224 20 122 / 22%);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button.secondary { border: 1px solid #dbe1f4; color: #34446c; background: #fff; box-shadow: none; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .timer { display: inline-flex; align-items: center; gap: 8px; padding: 10px 13px; border-radius: 999px; background: #eef1ff; color: #34446c; font-size: 12px; font-weight: 700; }
+    .timer strong { color: #1739bf; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .camera { position: relative; width: min(100%, 720px); aspect-ratio: 4 / 3; margin: 0 auto; overflow: hidden; border: 5px solid #fff; border-radius: 22px; background: #101820; box-shadow: 0 12px 28px rgb(17 38 83 / 18%); }
+    video, canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+    canvas { position: absolute; inset: 0; }
+    .camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; padding: 24px; color: #dbe5ff; text-align: center; pointer-events: none; }
+    .camera-placeholder .material-symbols-outlined { font-size: 42px; color: #a9bcff; }
+    .camera-placeholder span:last-child { font-size: 13px; line-height: 1.5; }
+    #status { min-height: 22px; margin: 15px 0 0; color: #4b5c82; font-size: 13px; font-weight: 700; line-height: 1.6; }
+    .side-card { position: sticky; top: 108px; }
+    .observation-content { min-height: 88px; margin: 16px 0 0; padding: 14px; border-radius: 15px; background: #f3f5ff; color: #34446c; font-size: 13px; font-weight: 700; line-height: 1.7; overflow-wrap: anywhere; }
+    .side-note { margin: 14px 0 0; color: #68748e; font-size: 12px; line-height: 1.6; }
+    @media (max-width: 1080px) {
+      .topbar { flex-wrap: wrap; border-radius: 28px; }
+      nav { order: 3; width: 100%; justify-content: center; overflow-x: auto; }
+      nav a { padding-inline: 12px; }
+    }
+    @media (max-width: 760px) {
+      .content-grid { grid-template-columns: minmax(0, 1fr); }
+      .side-card { position: static; }
+      .topbar { gap: 10px; }
+      .settings-link { margin-left: auto; }
+    }
+    @media (max-width: 520px) {
+      .topbar-wrap { padding: 8px 10px 0; }
+      .topbar { min-height: 62px; padding: 10px 13px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 15px; }
+      .brand-subtitle { font-size: 8px; }
+      .settings-link { padding: 8px; font-size: 0; }
+      nav { justify-content: flex-start; }
+      nav a { font-size: 11px; }
+      main { padding-top: 27px; }
+      .intro { font-size: 14px; }
+      .stepper { gap: 5px; font-size: 10px; }
+      .step { gap: 5px; padding: 7px 8px; }
+      .step-number { width: 19px; height: 19px; }
+      .assessment-card { border-radius: 21px; }
+      .controls { align-items: stretch; }
+      .controls button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
   </style>
   <script defer src="/webcam-assets/face-api.js"></script>
   <script defer src="/webcam-assets/pain-assessment.js"></script>
   <script defer src="/facial-assessment/app.js"></script>
 </head>
 <body>
-  <h1>One-minute facial assessment</h1>
-  <p id="child-name">Loading selected child…</p>
-  <p class="notice" role="note">
-    Experimental visual-only estimate. It is not validated for child pain and cannot measure pain accurately.
-    Do not use it to diagnose, treat, or delay care. Ask a qualified clinician about health concerns.
-  </p>
-  <section class="panel">
-    <h2>Optional observations</h2>
-    <p id="observation-summary">Loading saved observations…</p>
-    <p>These observations are stored as report context only. They do not affect the facial estimate.</p>
-  </section>
-  <section class="panel">
-    <h2>Camera assessment</h2>
-    <p>Only facial expressions and 68 facial landmarks are analyzed. The camera stream stays in this browser; no audio or body movement is captured or uploaded.</p>
-    <div class="controls">
-      <button id="start-button" type="button" disabled>Loading facial models…</button>
-      <button id="cancel-button" class="secondary" type="button" hidden>Stop without report</button>
-      <span>Time remaining: <strong id="time-remaining">01:00</strong></span>
+  <div class="topbar-wrap">
+    <header class="topbar">
+      <a class="brand" href="/dashboard">
+        <span class="brand-mark"><span class="material-symbols-outlined">vital_signs</span></span>
+        <span><span class="brand-name">LittleCare AI</span><br><span class="brand-subtitle">PEDIATRIC NEURO-SENSE</span></span>
+      </a>
+      <nav aria-label="Assessment progress">
+        <a href="/dashboard">Child Profile</a>
+        <a href="/assessment-launch" id="assessment-nav-link">Assessment Launch</a>
+        <a aria-current="page" href="#camera-card">Camera Telemetry</a>
+        <a href="/ai-disambiguation" id="confirmation-nav-link">Confirmation</a>
+        <a href="/pain-scale-report" id="report-nav-link">Pain Scale Report</a>
+      </nav>
+      <a class="settings-link" href="/dashboard"><span class="material-symbols-outlined">settings</span> Dashboard</a>
+      <span class="account-icon" aria-label="Signed in"><span class="material-symbols-outlined">person</span></span>
+    </header>
+  </div>
+
+  <main>
+    <div class="eyebrow"><span class="material-symbols-outlined">center_focus_strong</span> Assessment step 3</div>
+    <h1>One-minute facial assessment</h1>
+    <p class="intro">Capture facial expressions and landmarks in the browser, then continue to caregiver confirmation.</p>
+
+    <div class="stepper" aria-label="Assessment steps">
+      <span class="step"><span class="step-number">1</span> Child profile</span>
+      <span class="step-line"></span>
+      <span class="step"><span class="step-number">2</span> Observations</span>
+      <span class="step-line"></span>
+      <span class="step active"><span class="step-number">3</span> Camera</span>
     </div>
-    <div class="camera">
-      <video id="video" autoplay muted playsinline></video>
-      <canvas id="overlay"></canvas>
+    <p class="load-status" id="child-name" role="status" aria-live="polite">Loading selected child…</p>
+
+    <div class="content-grid">
+      <section class="assessment-card" id="camera-card" aria-labelledby="camera-title">
+        <div class="card-heading">
+          <h2 id="camera-title">Camera assessment</h2>
+          <p>Only facial expressions and 68 facial landmarks are analyzed. The camera stream stays in this browser; no audio or body movement is captured or uploaded.</p>
+        </div>
+        <p class="notice" role="note">
+          <span class="material-symbols-outlined" aria-hidden="true">info</span>
+          <span>Experimental visual-only estimate. It is not validated for child pain and cannot measure pain accurately. Do not use it to diagnose, treat, or delay care. Ask a qualified clinician about health concerns.</span>
+        </p>
+        <div class="controls">
+          <button id="start-button" type="button" disabled><span class="material-symbols-outlined" aria-hidden="true">videocam</span><span id="start-button-label">Loading facial models…</span></button>
+          <button id="cancel-button" class="secondary" type="button" hidden><span class="material-symbols-outlined" aria-hidden="true">stop_circle</span>Stop without report</button>
+          <span class="timer"><span class="material-symbols-outlined" aria-hidden="true">timer</span> Time remaining: <strong id="time-remaining">01:00</strong></span>
+        </div>
+        <div class="camera">
+          <video id="video" autoplay muted playsinline></video>
+          <canvas id="overlay"></canvas>
+          <div class="camera-placeholder" id="camera-placeholder">
+            <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
+            <span>Camera preview appears here after you start the assessment.</span>
+          </div>
+        </div>
+        <p id="status" role="status" aria-live="polite">Loading face detection, expression, and landmark models…</p>
+      </section>
+
+      <aside class="assessment-card side-card" aria-labelledby="observations-title">
+        <div class="card-heading">
+          <h2 id="observations-title">Optional observations</h2>
+          <p>Saved with this assessment for report context.</p>
+        </div>
+        <p class="observation-content" id="observation-summary">Loading saved observations…</p>
+        <p class="side-note">These observations are contextual information only. They do not affect the experimental facial estimate.</p>
+      </aside>
     </div>
-    <p id="status" role="status" aria-live="polite">Loading face detection, expression, and landmark models…</p>
-  </section>
+  </main>
+  <script>
+    (() => {
+      const pageParams = new URLSearchParams(location.search);
+      const profileId = pageParams.get('profileId');
+      const assessmentId = pageParams.get('assessmentId');
+      for (const [id, route] of [
+        ['assessment-nav-link', '/assessment-launch'],
+        ['confirmation-nav-link', '/ai-disambiguation'],
+        ['report-nav-link', '/pain-scale-report']
+      ]) {
+        document.getElementById(id).href =
+          `${route}?profileId=${encodeURIComponent(profileId || '')}&assessmentId=${encodeURIComponent(assessmentId || '')}`;
+      }
+
+      const placeholder = document.getElementById('camera-placeholder');
+      const video = document.getElementById('video');
+      const updateCameraPlaceholder = () => {
+        placeholder.hidden = Boolean(video.srcObject);
+      };
+      video.addEventListener('loadedmetadata', updateCameraPlaceholder);
+      video.addEventListener('emptied', updateCameraPlaceholder);
+      updateCameraPlaceholder();
+    })();
+  </script>
 </body>
 </html>

@@ -257,6 +257,7 @@
     const submitButton = document.getElementById('calculate-report');
     const status = document.getElementById('confirmation-status');
     let capture;
+    let retryRequired = false;
 
     for (const [page, route] of Object.entries({
       dashboard: '/dashboard',
@@ -312,6 +313,13 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (retryRequired) {
+        sessionStorage.removeItem(captureKey);
+        location.assign(
+          `/camera-telemetry?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`
+        );
+        return;
+      }
       if (!capture || !form.reportValidity()) return;
 
       const answers = Object.fromEntries(new FormData(form));
@@ -330,7 +338,12 @@
           caregiverAnswers
         });
         if (report.confidence < 60) {
-          throw new Error('Capture quality is below 60%. Return to the camera assessment and retry with a clearer, better-lit face view.');
+          retryRequired = true;
+          submitButton.querySelector('span').textContent = 'Retake the live video test';
+          submitButton.querySelector('.material-symbols-outlined').textContent = 'replay';
+          status.textContent = 'Capture quality is below 60%. Return to the camera assessment and retry with a clearer, better-lit face view.';
+          submitButton.disabled = false;
+          return;
         }
         const response = await fetch(
           `/api/child-profiles/${encodeURIComponent(profileId)}/assessments/${encodeURIComponent(assessmentId)}/pain-report`,

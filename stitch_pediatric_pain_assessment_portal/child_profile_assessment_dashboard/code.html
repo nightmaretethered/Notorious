@@ -192,8 +192,12 @@ body > main > div:first-child {
 </button>
 <button class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-full bg-white/75 hover:bg-white text-primary font-label-md text-label-md shadow-md transition-all duration-200" id="scan-profile-qr-button" type="button">
 <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-<span>Create Profile with QR Scan</span>
+<span>Scan QR Code</span>
 </button>
+<a class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-full bg-white/75 hover:bg-white text-primary font-label-md text-label-md shadow-md transition-all duration-200" href="/hospital-qr-generator">
+<span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+<span>Generate Report QR</span>
+</a>
 </div>
 </div>
 </div>
@@ -361,8 +365,8 @@ body > main > div:first-child {
 <section class="w-full max-w-xl bg-surface-container-lowest rounded-[28px] p-space-md sm:p-space-xl shadow-2xl flex flex-col gap-space-md max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="qr-scanner-title">
 <div class="flex items-center justify-between gap-space-sm">
 <div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface" id="qr-scanner-title">Create Child Profile with QR</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Scan a hospital QR containing JSON with a child name and optional age.</p>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface" id="qr-scanner-title">Scan QR Code</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Scan a report link to open it, or scan profile JSON to prefill a new child profile.</p>
 </div>
 <button class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-variant text-on-surface flex items-center justify-center" id="close-qr-scanner" type="button" aria-label="Close QR scanner">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -371,7 +375,7 @@ body > main > div:first-child {
 <video class="w-full max-h-64 rounded-[20px] bg-inverse-surface object-contain" id="qr-scanner-video" autoplay playsinline muted></video>
 <p class="font-body-sm text-body-sm text-on-surface-variant" id="qr-scanner-status" role="status" aria-live="polite">Starting QR scanner…</p>
 <div class="flex flex-col gap-1">
-<label class="font-label-md text-label-md font-semibold text-on-surface" for="qr-profile-json">Or paste the QR JSON</label>
+<label class="font-label-md text-label-md font-semibold text-on-surface" for="qr-profile-json">Or paste a report link or profile JSON</label>
 <textarea class="w-full px-space-md py-space-sm rounded-[16px] bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary" id="qr-profile-json" rows="3" placeholder='{"displayName":"Child Name","ageYears":3}'></textarea>
 </div>
 <p class="font-body-sm text-error" id="qr-scanner-error" role="alert" hidden></p>
@@ -521,6 +525,37 @@ body > main > div:first-child {
       }
 
       function useQrProfileData(rawValue) {
+        let reportUrl;
+        try {
+          reportUrl = new URL(rawValue);
+        } catch {
+          reportUrl = null;
+        }
+
+        if (reportUrl?.pathname === '/pain-scale-report') {
+          const profileId = reportUrl.searchParams.get('profileId') || '';
+          const assessmentId = reportUrl.searchParams.get('assessmentId') || '';
+          if (
+            reportUrl.origin !== window.location.origin
+            || reportUrl.hash
+            || reportUrl.searchParams.size !== 2
+            || reportUrl.searchParams.getAll('profileId').length !== 1
+            || reportUrl.searchParams.getAll('assessmentId').length !== 1
+            || !/^[1-9]\d{0,17}$/.test(profileId)
+            || !/^[1-9]\d{0,17}$/.test(assessmentId)
+          ) {
+            qrError.textContent = 'This report QR link is invalid or belongs to a different application.';
+            qrError.hidden = false;
+            return;
+          }
+
+          closeQrScanner();
+          window.location.assign(
+            `/pain-scale-report?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`
+          );
+          return;
+        }
+
         let data;
         try {
           data = JSON.parse(rawValue);
@@ -569,7 +604,7 @@ body > main > div:first-child {
               return;
             }
           } catch (error) {
-            qrStatus.textContent = 'QR scanning failed. Paste the QR JSON below to continue.';
+            qrStatus.textContent = 'QR scanning failed. Paste a report link or profile JSON below to continue.';
             console.error('Child profile QR scan failed:', error);
             stopQrScanner();
             return;
@@ -586,11 +621,11 @@ body > main > div:first-child {
         document.getElementById('qr-profile-json').value = '';
         qrStatus.textContent = 'Allow camera access to scan a QR code, or paste its JSON below.';
         if (typeof window.BarcodeDetector !== 'function') {
-          qrStatus.textContent = 'QR scanning is not supported in this browser. Paste the QR JSON below instead.';
+          qrStatus.textContent = 'QR scanning is not supported in this browser. Paste a report link or profile JSON below instead.';
           return;
         }
         if (!navigator.mediaDevices?.getUserMedia) {
-          qrStatus.textContent = 'Camera access is unavailable. Paste the QR JSON below instead.';
+          qrStatus.textContent = 'Camera access is unavailable. Paste a report link or profile JSON below instead.';
           return;
         }
 
@@ -612,15 +647,17 @@ body > main > div:first-child {
         } catch (error) {
           stopQrScanner();
           qrStatus.textContent = error.name === 'NotAllowedError'
-            ? 'Camera permission was denied. Allow camera access or paste the QR JSON below.'
-            : 'Could not start the QR camera. Paste the QR JSON below instead.';
+            ? 'Camera permission was denied. Allow camera access or paste a report link or profile JSON below.'
+            : 'Could not start the QR camera. Paste a report link or profile JSON below instead.';
           console.error('Child profile QR scanner could not start:', error);
         }
       }
 
       async function loadProfiles() {
         try {
-          const response = await fetch('/api/child-profiles');
+          const response = await fetch('/api/child-profiles', {
+            signal: AbortSignal.timeout(10000)
+          });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Could not load child profiles.');
           profiles.splice(0, profiles.length, ...result.profiles);
@@ -630,7 +667,9 @@ body > main > div:first-child {
             document.getElementById('profile-load-status').textContent = 'Create a child profile to save their details and continue to the assessment.';
           }
         } catch (error) {
-          document.getElementById('profile-load-status').textContent = error.message || 'Could not load child profiles. Refresh and try again.';
+          document.getElementById('profile-load-status').textContent = error.name === 'TimeoutError'
+            ? 'Loading child profiles timed out. Check your connection and refresh to try again.'
+            : error.message || 'Could not load child profiles. Refresh and try again.';
           document.getElementById('create-profile-button').disabled = true;
           console.error('Child profiles could not be loaded:', error);
         }
@@ -638,7 +677,9 @@ body > main > div:first-child {
 
       async function loadSignedInUser() {
         try {
-          const response = await fetch('/api/auth/me');
+          const response = await fetch('/api/auth/me', {
+            signal: AbortSignal.timeout(10000)
+          });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Could not load the signed-in account.');
           document.getElementById('signed-in-user').textContent = `Signed in as ${result.user.email}`;
@@ -714,7 +755,8 @@ body > main > div:first-child {
             {
               method: editingProfileId ? 'PUT' : 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
+              signal: AbortSignal.timeout(15000)
             }
           );
           const result = await response.json();
@@ -729,7 +771,9 @@ body > main > div:first-child {
           closeEditor();
           document.getElementById('profile-load-status').textContent = 'Child profile saved to your account.';
         } catch (error) {
-          showFormError(error.message || 'The child profile could not be saved. Try again.');
+          showFormError(error.name === 'TimeoutError'
+            ? 'Saving the child profile timed out. Check your connection and try again.'
+            : error.message || 'The child profile could not be saved. Try again.');
           console.error('Child profile could not be saved:', error);
         } finally {
           saveButton.disabled = false;

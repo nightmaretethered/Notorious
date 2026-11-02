@@ -15,6 +15,7 @@
     }
 
     * { box-sizing: border-box; }
+    h1, h2, h3, h4, h5, h6 { font-weight: 800; }
     html { min-height: 100%; overflow-y: auto; scrollbar-gutter: stable; }
     body {
       min-width: 0;
@@ -205,10 +206,47 @@
     .pain-summary-value {
       color: #112653;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.65;
       overflow-wrap: anywhere;
     }
+    .pain-level-value { width: fit-content; padding: 3px 11px; border-radius: 999px; }
+    .pain-level-calm { color: #146c2e; background: #d9f6df; }
+    .pain-level-mild { color: #805800; background: #fff0b8; }
+    .pain-level-severe { color: #a51d27; background: #ffe0e2; }
+    .score-meter {
+      position: relative;
+      height: 14px;
+      margin: 10px 0 4px;
+      border: 1px solid rgb(16 36 84 / 16%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #d92732 0%, #f0c533 50%, #238744 100%);
+    }
+    #pain-score-meter {
+      background: linear-gradient(90deg, #238744 0%, #f0c533 50%, #d92732 100%);
+    }
+    .score-meter[hidden] { display: none; }
+    .score-meter-marker {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: #122347;
+      box-shadow: 0 1px 5px rgb(0 0 0 / 45%);
+      transform: translate(-50%, -50%);
+      transition: left .25s ease;
+    }
+    .score-meter-scale {
+      display: flex;
+      justify-content: space-between;
+      color: #56627a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .score-meter-scale[hidden] { display: none; }
     .report-field {
       min-width: 0;
       padding: 16px;
@@ -221,6 +259,12 @@
       font-size: 16px;
       font-weight: 700;
       line-height: 1.65;
+    }
+    .confidence-report {
+      color: #102454;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.7;
     }
     .reasons-list { margin: 0; padding-left: 20px; }
     .report-status { min-height: 18px; margin: 10px 0 0; color: #fff; font-size: 12px; }
@@ -260,7 +304,7 @@
 <body>
   <div class="topbar-wrap">
     <header class="topbar">
-      <a class="brand" href="/dashboard">
+      <a class="brand" href="/dashboard" id="report-home-link">
         <span class="brand-mark"><span class="material-symbols-outlined">vital_signs</span></span>
         <span><span class="brand-name">LittleCare AI</span><br><span class="brand-subtitle">PEDIATRIC NEURO-SENSE</span></span>
       </a>
@@ -270,8 +314,9 @@
         <a data-page-link="camera" href="/camera-telemetry">Camera Telemetry</a>
         <a data-page-link="disambiguation" href="/ai-disambiguation">AI Disambiguation</a>
         <a aria-current="page" data-page-link="report" href="/pain-scale-report">Pain Scale Report</a>
+        <a data-page-link="hospital-reports" href="/hospital-reports" hidden>All caregiver reports</a>
       </nav>
-      <a class="settings-link" href="/dashboard"><span class="material-symbols-outlined">settings</span> Dashboard</a>
+      <a class="settings-link" href="/dashboard" id="report-dashboard-link"><span class="material-symbols-outlined">settings</span><span>Dashboard</span></a>
       <span class="account-icon" aria-label="Signed in"><span class="material-symbols-outlined">person</span></span>
     </header>
   </div>
@@ -289,21 +334,41 @@
           <span class="field-label">Created at</span>
           <span class="field-value pending-value" id="report-created-at">Awaiting report generation</span>
         </div>
+        <div class="report-meta-item" id="hospital-patient-age-item" hidden>
+          <span class="field-label">Patient age</span>
+          <span class="field-value" id="report-patient-age"></span>
+        </div>
+        <div class="report-meta-item" id="hospital-caregiver-item" hidden>
+          <span class="field-label">Submitted by caregiver</span>
+          <span class="field-value" id="report-caregiver-email"></span>
+        </div>
       </div>
       <div class="pain-summary" aria-label="Pain score summary">
         <div class="pain-summary-item">
           <span class="field-label">Pain level</span>
-          <div class="pain-summary-value" id="report-pain-level">Awaiting AI model</div>
+          <div class="pain-summary-value pain-level-value" id="report-pain-level">Awaiting AI model</div>
         </div>
         <div class="pain-summary-item">
           <span class="field-label">Pain score (0–100)</span>
           <div class="pain-summary-value" id="report-pain-score">Awaiting AI model</div>
+          <div class="score-meter" id="pain-score-meter" role="meter" aria-label="Pain score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+            <span class="score-meter-marker" id="pain-score-marker"></span>
+          </div>
+          <div class="score-meter-scale" id="pain-score-scale" aria-hidden="true" hidden><span>0</span><span>100</span></div>
         </div>
       </div>
       <div class="report-grid">
         <div class="report-field">
           <span class="field-label">Face capture quality (0–100)</span>
           <span class="pending-value" id="report-confidence">Awaiting AI model</span>
+          <div class="score-meter" id="capture-quality-meter" role="meter" aria-label="Face capture quality" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+            <span class="score-meter-marker" id="capture-quality-marker"></span>
+          </div>
+          <div class="score-meter-scale" id="capture-quality-scale" aria-hidden="true" hidden><span>0</span><span>100</span></div>
+        </div>
+        <div class="report-field">
+          <span class="field-label">Confidence report</span>
+          <div class="confidence-report" id="report-confidence-report">Awaiting AI model</div>
         </div>
         <div class="report-field">
           <span class="field-label">Reasons</span>
@@ -314,7 +379,7 @@
           <span class="pending-value" id="report-guidance">Awaiting AI model</span>
         </div>
         <div class="report-field">
-          <span class="field-label">Optional health context (not used in score)</span>
+          <span class="field-label">Optional health context</span>
           <span class="pending-value" id="report-context">No optional observations entered</span>
         </div>
       </div>
@@ -328,6 +393,8 @@
   <script>
     const reportData = {
       child: '',
+      ageYears: null,
+      caregiverEmail: null,
       painLevel: null,
       painScore: null,
       confidence: null,
@@ -336,14 +403,87 @@
       createdAt: null,
       context: {}
     };
+    const isHospitalReport = location.pathname === '/hospital-report';
 
     function renderReport(data) {
       document.getElementById('report-child-name').textContent = data.child || 'No child selected';
-      document.getElementById('report-pain-level').textContent = data.painLevel || 'Awaiting AI model';
+      if (isHospitalReport) {
+        document.getElementById('hospital-patient-age-item').hidden = false;
+        document.getElementById('report-patient-age').textContent =
+          Number.isFinite(data.ageYears) ? `${data.ageYears} years` : 'Not provided';
+        document.getElementById('hospital-caregiver-item').hidden = false;
+        document.getElementById('report-caregiver-email').textContent =
+          data.caregiverEmail || 'Not available';
+      }
+      const painLevel = document.getElementById('report-pain-level');
+      const normalizedPainLevel = typeof data.painLevel === 'string' ? data.painLevel.toLowerCase() : '';
+      painLevel.classList.remove('pain-level-calm', 'pain-level-mild', 'pain-level-severe');
+      if (normalizedPainLevel === 'calm') {
+        painLevel.textContent = 'Calm';
+        painLevel.classList.add('pain-level-calm');
+      } else if (normalizedPainLevel === 'mild') {
+        painLevel.textContent = 'Mild';
+        painLevel.classList.add('pain-level-mild');
+      } else if (normalizedPainLevel.includes('severe')) {
+        painLevel.textContent = 'Severe';
+        painLevel.classList.add('pain-level-severe');
+      } else {
+        painLevel.textContent = 'Awaiting assessment';
+      }
+
+      const painScoreIsValid =
+        Number.isFinite(data.painScore) && data.painScore >= 0 && data.painScore <= 100;
+      const painMeter = document.getElementById('pain-score-meter');
+      document.getElementById('pain-score-scale').hidden = !painScoreIsValid;
       document.getElementById('report-pain-score').textContent =
-        Number.isFinite(data.painScore) ? `${data.painScore} / 100` : 'Awaiting AI model';
+        painScoreIsValid ? `${data.painScore} / 100` : 'Awaiting assessment';
+      painMeter.hidden = !painScoreIsValid;
+      if (painScoreIsValid) {
+        painMeter.setAttribute('aria-valuenow', String(data.painScore));
+        painMeter.setAttribute('aria-valuetext', `${data.painScore} out of 100`);
+        document.getElementById('pain-score-marker').style.left = `${data.painScore}%`;
+      }
+
+      const captureQualityIsValid =
+        Number.isFinite(data.confidence) && data.confidence >= 0 && data.confidence <= 100;
       document.getElementById('report-confidence').textContent =
-        Number.isFinite(data.confidence) ? `${data.confidence} / 100` : 'Awaiting AI model';
+        captureQualityIsValid ? `${data.confidence} / 100` : 'Awaiting assessment';
+      const captureMeter = document.getElementById('capture-quality-meter');
+      document.getElementById('capture-quality-scale').hidden = !captureQualityIsValid;
+      captureMeter.hidden = !captureQualityIsValid;
+      if (captureQualityIsValid) {
+        captureMeter.setAttribute('aria-valuenow', String(data.confidence));
+        captureMeter.setAttribute('aria-valuetext', `${data.confidence} out of 100`);
+        document.getElementById('capture-quality-marker').style.left = `${data.confidence}%`;
+      }
+
+      const confidenceReport = document.getElementById('report-confidence-report');
+      if (captureQualityIsValid) {
+        const confidenceLabel = data.confidence >= 85
+          ? 'high'
+          : data.confidence >= 70
+            ? 'moderate'
+            : data.confidence >= 50
+              ? 'limited'
+              : 'low';
+        const distressSummary = Number.isFinite(data.painScore)
+          ? data.painScore >= 70
+            ? 'strong visual distress patterns'
+            : data.painScore >= 50
+              ? 'moderate visual distress patterns'
+              : 'light visual distress patterns'
+          : 'visual pattern data';
+        const caregiverEvidence = Array.isArray(data.reasons)
+          ? data.reasons.filter((reason) => reason.includes('Parent confirmation:')).join(' ')
+          : '';
+        const summaryText = caregiverEvidence
+          ? `AI face analysis showed ${distressSummary}, while the caregiver responses support the result (${caregiverEvidence.replace(/\s+/g, ' ')}). Overall confidence is ${data.confidence}% (${confidenceLabel}).`
+          : `AI face analysis showed ${distressSummary}. Overall confidence is ${data.confidence}% (${confidenceLabel}).`;
+        confidenceReport.textContent = summaryText;
+      } else {
+        confidenceReport.textContent = 'Awaiting AI model';
+      }
+
       document.getElementById('report-guidance').textContent = data.guidance || 'Awaiting AI model';
       document.getElementById('report-created-at').textContent = data.createdAt
         ? new Date(data.createdAt).toLocaleString()
@@ -383,6 +523,19 @@
       const profileId = params.get('profileId') || sessionStorage.getItem('littlecare_profile_id');
       const requestedAssessmentId = params.get('assessmentId');
       const status = document.getElementById('report-status');
+      if (isHospitalReport) {
+        document.title = 'Caregiver Report | LittleCare AI';
+        document.querySelectorAll('nav a[data-page-link]:not([data-page-link="hospital-reports"])')
+          .forEach((link) => { link.hidden = true; });
+        const reportsLink = document.querySelector('[data-page-link="hospital-reports"]');
+        reportsLink.hidden = false;
+        reportsLink.removeAttribute('aria-current');
+        document.getElementById('report-home-link').href = '/hospital-reports';
+        const dashboardLink = document.getElementById('report-dashboard-link');
+        dashboardLink.href = '/hospital-reports';
+        dashboardLink.querySelector('.material-symbols-outlined').textContent = 'list_alt';
+        dashboardLink.querySelector('span:last-child').textContent = 'All reports';
+      }
       const routes = {
         dashboard: '/dashboard',
         assessment: '/assessment-launch',
@@ -390,6 +543,42 @@
         disambiguation: '/ai-disambiguation',
         report: '/pain-scale-report'
       };
+
+      if (isHospitalReport) {
+        if (!/^[1-9]\d{0,17}$/.test(profileId || '') ||
+            !/^[1-9]\d{0,17}$/.test(requestedAssessmentId || '')) {
+          document.getElementById('report-child-name').textContent = 'Report not selected';
+          status.textContent = 'Select a completed report from the hospital reports list.';
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `/api/hospital-reports/${encodeURIComponent(profileId)}/${encodeURIComponent(requestedAssessmentId)}`
+          );
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not load this caregiver report.');
+          reportData.child = result.profile.displayName;
+          reportData.ageYears = result.profile.ageYears;
+          reportData.caregiverEmail = result.caregiverEmail;
+          const assessment = result.assessment;
+          Object.assign(reportData, {
+            painLevel: assessment.painLevel,
+            painScore: assessment.painScore,
+            confidence: assessment.confidence,
+            reasons: assessment.reasons,
+            guidance: assessment.guidance,
+            context: assessment.context,
+            createdAt: assessment.createdAt
+          });
+          renderReport(reportData);
+        } catch (error) {
+          document.getElementById('report-child-name').textContent = 'Could not load report';
+          status.textContent = error.message || 'Could not load this caregiver report.';
+          console.error('Hospital report could not be loaded:', error);
+        }
+        return;
+      }
 
       if (profileId && /^[1-9]\d{0,17}$/.test(profileId)) {
         sessionStorage.setItem('littlecare_profile_id', profileId);

@@ -201,6 +201,65 @@
     feedback.hidden = !message;
   }
 
+  function getPostAuthDestination() {
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+    if (!returnTo) return isHospitalPortal ? '/hospital-reports' : '/dashboard';
+
+    try {
+      const destination = new URL(returnTo, window.location.origin);
+      const profileId = destination.searchParams.get('profileId') || '';
+      const assessmentId = destination.searchParams.get('assessmentId') || '';
+      if (
+        isHospitalPortal
+        && destination.origin === window.location.origin
+        && !destination.hash
+        && destination.pathname === '/hospital-reports'
+        && destination.searchParams.size === 0
+      ) {
+        return '/hospital-reports';
+      }
+      if (
+        isHospitalPortal
+        && destination.origin === window.location.origin
+        && !destination.hash
+        && destination.pathname === '/hospital-report'
+        && destination.searchParams.size === 2
+        && destination.searchParams.getAll('profileId').length === 1
+        && destination.searchParams.getAll('assessmentId').length === 1
+        && /^[1-9]\d{0,17}$/.test(profileId)
+        && /^[1-9]\d{0,17}$/.test(assessmentId)
+      ) {
+        return `/hospital-report?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`;
+      }
+      if (
+        !isHospitalPortal
+        && destination.origin === window.location.origin
+        && destination.pathname === '/pain-scale-report'
+        && !destination.hash
+        && destination.searchParams.size === 2
+        && destination.searchParams.getAll('profileId').length === 1
+        && destination.searchParams.getAll('assessmentId').length === 1
+        && /^[1-9]\d{0,17}$/.test(profileId)
+        && /^[1-9]\d{0,17}$/.test(assessmentId)
+      ) {
+        return `/pain-scale-report?profileId=${encodeURIComponent(profileId)}&assessmentId=${encodeURIComponent(assessmentId)}`;
+      }
+    } catch (error) {
+      console.error('Requested sign-in destination could not be validated:', error);
+    }
+
+    return '/dashboard';
+  }
+
+  const postAuthDestination = getPostAuthDestination();
+  if (postAuthDestination !== '/dashboard') {
+    const encodedDestination = encodeURIComponent(postAuthDestination);
+    document.querySelector('#hospital-login-link a').href =
+      `/hospital-login?returnTo=${encodedDestination}`;
+    document.querySelector('#individual-login-link a').href =
+      `/login?returnTo=${encodedDestination}`;
+  }
+
   async function configureGoogleSignIn() {
     const button = document.getElementById('google-auth-button');
     const label = document.getElementById('google-auth-label');
@@ -261,7 +320,7 @@
         return;
       }
 
-      window.location.assign('/dashboard');
+      window.location.assign(getPostAuthDestination());
     } catch (error) {
       console.error('Authentication request failed:', error);
       showAuthFeedback('Unable to connect right now. Check that the app and database are running, then try again.');
